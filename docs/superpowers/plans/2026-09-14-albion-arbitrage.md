@@ -202,10 +202,10 @@ Files:
 **Files:**
 - Create: `frontend/src/components/ShowTheMathModal.astro`
 
-- [ ] **Step 1: Render exact breakdown: raw material cost + previous tier cost - RRR refund = net material cost**
-- [ ] **Step 2: Render exact station fee + market tax breakdown**
-- [ ] **Step 3: Provide copyable summary text for Discord/guild trade planning**
-- [ ] **Step 4: Commit:** `feat(frontend): show the math interactive calculation audit modal`
+- [x] **Step 1: Render exact breakdown: raw material cost + previous tier cost - RRR refund = net material cost**
+- [x] **Step 2: Render exact station fee + market tax breakdown**
+- [x] **Step 3: Provide copyable summary text for Discord/guild trade planning**
+- [x] **Step 4: Commit:** `feat(frontend): show the math step-by-step audit modal with discord export`
 
 ---
 

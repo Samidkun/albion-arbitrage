@@ -1,0 +1,1398 @@
+---
+// ShowTheMathModal.astro - "Show the Math" Step-by-Step Calculation Audit Modal
+---
+
+<div
+  id="math-modal-backdrop"
+  class="modal-backdrop modal-hidden"
+  aria-hidden="true"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modal-item-name"
+>
+  <div class="modal-card" id="math-modal-card">
+    <!-- Modal Header -->
+    <header class="modal-header">
+      <div class="modal-header-info">
+        <div class="modal-badge-row">
+          <span id="modal-tier-badge" class="tier-pill">T6.1</span>
+          <span id="modal-city-badge" class="city-pill">Fort Sterling (Bonus City)</span>
+          <span id="modal-rrr-badge" class="rrr-pill">36.7% RRR</span>
+          <span id="modal-chained-badge" class="chained-pill" style="display: none;">Chained Craft</span>
+        </div>
+        <h2 id="modal-item-name" class="modal-title">Bloodoak Planks (.1)</h2>
+        <div class="modal-subtitle">
+          <span id="modal-item-id" class="item-id-mono">T6_PLANKS_LEVEL1@1</span>
+          <span class="sub-sep">•</span>
+          <span id="modal-commodity-name">Wood</span>
+          <span class="sub-sep">•</span>
+          <span id="modal-age-caption" class="freshness-sub">Fresh (&lt; 15m)</span>
+        </div>
+      </div>
+      <button
+        type="button"
+        id="modal-close-btn"
+        class="close-btn"
+        aria-label="Tutup Rincian Kalkulasi"
+        title="Tutup (Esc)"
+      >
+        ✕
+      </button>
+    </header>
+
+    <!-- Modal Body (Audit Steps) -->
+    <div class="modal-body">
+      <!-- Step 1: Raw Material Breakdown -->
+      <section class="audit-step" aria-labelledby="step-1-title">
+        <div class="step-header">
+          <div class="step-header-left">
+            <span class="step-num-badge">01</span>
+            <div>
+              <h3 id="step-1-title" class="step-title">BAHAN MENTAH (RAW MATERIAL)</h3>
+              <p class="step-desc" id="step-raw-desc">4x T6_WOOD_LEVEL1@1</p>
+            </div>
+          </div>
+          <div class="step-header-right">
+            <span class="step-net-label">Net Raw Cost</span>
+            <span class="step-net-val tabular-figures" id="step-raw-net-total">0 Silver</span>
+          </div>
+        </div>
+        <div class="step-table">
+          <div class="audit-row">
+            <span class="label">Kebutuhan Dasar (Base Required)</span>
+            <span class="val tabular-figures" id="raw-amount-val">4 unit</span>
+          </div>
+          <div class="audit-row">
+            <span class="label">Harga Beli Pasar per Unit (Unit Price)</span>
+            <span class="val tabular-figures" id="raw-price-val">420 Silver</span>
+          </div>
+          <div class="audit-row">
+            <span class="label">Biaya Kotor Bahan Mentah (Gross Cost)</span>
+            <span class="val tabular-figures" id="raw-gross-val">1,680 Silver</span>
+          </div>
+          <div class="audit-row discount-row">
+            <span class="label">Refund Bahan RRR (<span id="raw-rrr-pct">36.7%</span>)</span>
+            <span class="val tabular-figures refund-text" id="raw-refund-val">-616.56 Silver (1.47 unit)</span>
+          </div>
+          <div class="audit-row subtotal-row">
+            <span class="label">Biaya Bersih Bahan Mentah (Net Raw Cost)</span>
+            <span class="val tabular-figures highlight-val" id="raw-net-val">1,063.44 Silver</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 2: Previous Tier Refined Material Breakdown -->
+      <section class="audit-step" aria-labelledby="step-2-title">
+        <div class="step-header">
+          <div class="step-header-left">
+            <span class="step-num-badge">02</span>
+            <div>
+              <h3 id="step-2-title" class="step-title">BAHAN OLAHAN TIER SEBELUMNYA (PREV TIER)</h3>
+              <p class="step-desc" id="step-prev-desc">1x T5_PLANKS_LEVEL1@1</p>
+            </div>
+          </div>
+          <div class="step-header-right">
+            <span class="step-net-label">Net Prev Cost</span>
+            <span class="step-net-val tabular-figures" id="step-prev-net-total">0 Silver</span>
+          </div>
+        </div>
+        <div class="step-table" id="step-prev-table">
+          <div class="audit-row">
+            <span class="label">Kebutuhan Olahan T-1 (Base Required)</span>
+            <span class="val tabular-figures" id="prev-amount-val">1 unit</span>
+          </div>
+          <div class="audit-row">
+            <span class="label">Harga Acuan (<span id="prev-price-source">Harga Pasar</span>)</span>
+            <span class="val tabular-figures" id="prev-price-val">760 Silver</span>
+          </div>
+          <div class="audit-row">
+            <span class="label">Biaya Kotor Olahan T-1 (Gross Cost)</span>
+            <span class="val tabular-figures" id="prev-gross-val">760 Silver</span>
+          </div>
+          <div class="audit-row discount-row">
+            <span class="label">Refund Bahan RRR (<span id="prev-rrr-pct">36.7%</span>)</span>
+            <span class="val tabular-figures refund-text" id="prev-refund-val">-278.92 Silver (0.37 unit)</span>
+          </div>
+          <div class="audit-row subtotal-row">
+            <span class="label">Biaya Bersih Olahan T-1 (Net Prev Cost)</span>
+            <span class="val tabular-figures highlight-val" id="prev-net-val">481.08 Silver</span>
+          </div>
+        </div>
+        <div class="no-prev-box" id="no-prev-box" style="display: none;">
+          <span>Resep Tier dasar ini tidak membutuhkan olahan tier sebelumnya.</span>
+        </div>
+      </section>
+
+      <!-- Step 3: Station Nutrition Fee Breakdown -->
+      <section class="audit-step" aria-labelledby="step-3-title">
+        <div class="step-header">
+          <div class="step-header-left">
+            <span class="step-num-badge">03</span>
+            <div>
+              <h3 id="step-3-title" class="step-title">ONGKOS TUKANG TEMPA (STATION NUTRITION FEE)</h3>
+              <p class="step-desc">Formula Resmi Albion: IV × 0.1125 × (Tax / 100)</p>
+            </div>
+          </div>
+          <div class="step-header-right">
+            <span class="step-net-label">Total Station Fee</span>
+            <span class="step-net-val tabular-figures" id="step-station-fee-total">0 Silver</span>
+          </div>
+        </div>
+        <div class="step-table">
+          <div class="audit-row">
+            <span class="label">Nilai Item Dasar (Item Value / IV)</span>
+            <span class="val tabular-figures" id="station-iv-val">128</span>
+          </div>
+          <div class="audit-row">
+            <span class="label">Konsumsi Nutrisi Tukang (IV × 0.1125)</span>
+            <span class="val tabular-figures" id="station-nut-val">14.40 Nutrition</span>
+          </div>
+          <div class="audit-row">
+            <span class="label">Tarif Pajak Tukang (Station User Fee)</span>
+            <span class="val tabular-figures" id="station-tax-rate-val">600 Silver / 100 Nut</span>
+          </div>
+          <div class="audit-row subtotal-row">
+            <span class="label">Total Ongkos Sewa Tukang (Station Fee)</span>
+            <span class="val tabular-figures highlight-val" id="station-fee-val">86.40 Silver</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 4: Total Craft Cost Summary -->
+      <section class="audit-step total-step" aria-labelledby="step-4-title">
+        <div class="step-header">
+          <div class="step-header-left">
+            <span class="step-num-badge accent">04</span>
+            <div>
+              <h3 id="step-4-title" class="step-title">TOTAL MODAL PRODUKSI (TOTAL CRAFT COST)</h3>
+              <p class="step-desc">Net Raw Cost + Net Prev Cost + Station Fee</p>
+            </div>
+          </div>
+          <div class="step-header-right">
+            <span class="step-net-label">Biaya Pokok per Unit</span>
+            <span class="step-grand-val tabular-figures" id="total-craft-cost-val">1,630.92 Silver</span>
+          </div>
+        </div>
+        <div class="formula-banner">
+          <span class="formula-code tabular-figures" id="craft-cost-equation">
+            1,063.44 (Raw) + 481.08 (Prev) + 86.40 (Fee) = 1,630.92 Silver
+          </span>
+        </div>
+      </section>
+
+      <!-- Step 5: Sales & Market Taxes Breakdown -->
+      <section class="audit-step" aria-labelledby="step-5-title">
+        <div class="step-header">
+          <div class="step-header-left">
+            <span class="step-num-badge">05</span>
+            <div>
+              <h3 id="step-5-title" class="step-title">PENJUALAN & PAJAK PASAR (SALES & MARKET TAXES)</h3>
+              <p class="step-desc">Target Sell Price & Market Deductions</p>
+            </div>
+          </div>
+          <div class="step-header-right">
+            <span class="step-net-label">Net Revenue</span>
+            <span class="step-net-val tabular-figures" id="step-net-rev-total">0 Silver</span>
+          </div>
+        </div>
+        <div class="step-table">
+          <div class="audit-row">
+            <span class="label">Harga Jual Target (Target Sell Price)</span>
+            <span class="val tabular-figures" id="market-sell-price-val">2,450 Silver</span>
+          </div>
+          <div class="audit-row fee-row">
+            <span class="label">Pajak Penjualan / Sales Tax (<span id="market-tax-pct">4.0%</span>)</span>
+            <span class="val tabular-figures fee-text" id="market-tax-val">-98.00 Silver</span>
+          </div>
+          <div class="audit-row fee-row">
+            <span class="label">Biaya Pasang Order / Setup Fee (<span id="market-setup-pct">2.5%</span>)</span>
+            <span class="val tabular-figures fee-text" id="market-setup-val">-61.25 Silver</span>
+          </div>
+          <div class="audit-row subtotal-row">
+            <span class="label">Pendapatan Bersih Penjual (Net Revenue)</span>
+            <span class="val tabular-figures highlight-val" id="market-net-revenue-val">2,290.75 Silver</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 6: Profit & Focus Efficiency Breakdown -->
+      <section class="audit-step focus-step" aria-labelledby="step-6-title">
+        <div class="step-header">
+          <div class="step-header-left">
+            <span class="step-num-badge focus">06</span>
+            <div>
+              <h3 id="step-6-title" class="step-title">KEUNTUNGAN & EFISIENSI FOCUS (PROFIT & SPF)</h3>
+              <p class="step-desc">Perbandingan Profit Standar vs Focus (53.9% RRR)</p>
+            </div>
+          </div>
+          <div class="step-header-right">
+            <span class="step-net-label">Silver per Focus</span>
+            <span class="spf-badge-val tabular-figures" id="step-spf-total">54.2 SPF</span>
+          </div>
+        </div>
+        <div class="profit-grid">
+          <div class="profit-card">
+            <span class="profit-card-label">PROFIT TANPA FOCUS</span>
+            <span class="profit-card-value tabular-figures" id="profit-no-focus-val">+659.83 Silver</span>
+            <span class="profit-card-sub" id="profit-margin-val">Margin: 40.5%</span>
+          </div>
+          <div class="profit-card">
+            <span class="profit-card-label">PROFIT DENGAN FOCUS (53.9% RRR)</span>
+            <span class="profit-card-value tabular-figures accent-mint" id="profit-with-focus-val">+1,147.20 Silver</span>
+            <span class="profit-card-sub" id="profit-delta-val">+487.37 Silver bonus</span>
+          </div>
+          <div class="profit-card">
+            <span class="profit-card-label">FOCUS POINT DIPERLUKAN</span>
+            <span class="profit-card-value tabular-figures" id="focus-cost-val">450 FP</span>
+            <span class="profit-card-sub" id="focus-base-val">Base: 450 FP</span>
+          </div>
+          <div class="profit-card">
+            <span class="profit-card-label">SILVER PER FOCUS (SPF)</span>
+            <span class="profit-card-value tabular-figures accent-lime" id="spf-val">54.2 Silver/FP</span>
+            <span class="profit-card-sub">Delta Profit / Focus Cost</span>
+          </div>
+          <div class="profit-card full-width">
+            <div class="daily-yield-left">
+              <span class="profit-card-label">ESTIMASI SILVER DARI 10,000 FOCUS HARIAN</span>
+              <span class="daily-yield-val tabular-figures accent-lime" id="daily-focus-val">+542,000 Silver / hari</span>
+            </div>
+            <span class="daily-yield-sub">Yield jika 10k focus harian dialokasikan penuh ke resep ini</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal Footer -->
+    <footer class="modal-footer">
+      <div class="footer-note">
+        <span class="note-icon">📋</span>
+        <span>Format Discord otomatis disesuaikan untuk perencanaan guild & posting order.</span>
+      </div>
+      <div class="footer-buttons">
+        <button type="button" id="copy-discord-btn" class="btn-copy-discord">
+          <svg class="btn-svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+          </svg>
+          <span id="copy-discord-text">Salin Ringkasan (Discord/Guild)</span>
+        </button>
+        <button type="button" id="modal-close-footer-btn" class="btn-modal-close">
+          Tutup
+        </button>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<style>
+  /* Modal Backdrop */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(10, 12, 16, 0.82);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    padding: 1.25rem;
+    opacity: 1;
+    transition: opacity 0.18s ease-in-out;
+  }
+
+  .modal-backdrop.modal-hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+  }
+
+  /* Modal Card */
+  .modal-card {
+    width: 100%;
+    max-width: 740px;
+    max-height: 92vh;
+    background-color: var(--surface-primary);
+    border: 1px solid var(--border-hairline);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    animation: modal-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes modal-enter {
+    from {
+      transform: scale(0.97) translateY(8px);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Header */
+  .modal-header {
+    background-color: var(--surface-elevated);
+    border-bottom: 1px solid var(--border-hairline);
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .modal-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .modal-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tier-pill {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    background-color: var(--surface-primary);
+    border: 1px solid #3b82f6;
+    color: #60a5fa;
+  }
+  .tier-pill.tier-t4 { border-color: #3b82f6; color: #60a5fa; }
+  .tier-pill.tier-t5 { border-color: #ef4444; color: #f87171; }
+  .tier-pill.tier-t6 { border-color: #f97316; color: #fb923c; }
+  .tier-pill.tier-t7 { border-color: #eab308; color: #fde047; }
+  .tier-pill.tier-t8 { border-color: #e2e8f0; color: #ffffff; }
+
+  .city-pill {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    background-color: rgba(199, 245, 59, 0.1);
+    border: 1px solid rgba(199, 245, 59, 0.3);
+    color: var(--accent-primary);
+  }
+
+  .rrr-pill {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    background-color: rgba(78, 229, 182, 0.1);
+    border: 1px solid rgba(78, 229, 182, 0.3);
+    color: var(--accent-mint);
+  }
+
+  .chained-pill {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    background-color: rgba(157, 165, 180, 0.12);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-secondary);
+  }
+
+  .modal-title {
+    font-family: var(--font-mono);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .modal-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .item-id-mono {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+
+  .sub-sep {
+    color: var(--border-hairline);
+  }
+
+  .freshness-sub {
+    color: var(--accent-mint);
+    font-weight: 600;
+  }
+
+  .close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background-color: var(--surface-primary);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+
+  .close-btn:hover {
+    background-color: var(--border-hairline);
+    color: var(--text-primary);
+  }
+
+  /* Modal Body */
+  .modal-body {
+    overflow-y: auto;
+    padding: 1.25rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1;
+  }
+
+  /* Step Cards */
+  .audit-step {
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-hairline);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: rgba(22, 24, 28, 0.4);
+    border-bottom: 1px solid var(--border-hairline);
+    gap: 0.75rem;
+  }
+
+  .step-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .step-num-badge {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    background-color: var(--surface-primary);
+    border: 1px solid var(--border-hairline);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+  }
+
+  .step-num-badge.accent {
+    color: var(--accent-primary);
+    border-color: rgba(199, 245, 59, 0.3);
+  }
+
+  .step-num-badge.focus {
+    color: var(--accent-mint);
+    border-color: rgba(78, 229, 182, 0.3);
+  }
+
+  .step-title {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+
+  .step-desc {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 0.1rem;
+  }
+
+  .step-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+  }
+
+  .step-net-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .step-net-val {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .step-grand-val {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--accent-primary);
+  }
+
+  .spf-badge-val {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--accent-primary);
+  }
+
+  /* Step Table */
+  .step-table {
+    padding: 0.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .audit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    font-size: 0.78rem;
+    gap: 0.5rem;
+  }
+
+  .audit-row .label {
+    color: var(--text-secondary);
+  }
+
+  .audit-row .val {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .audit-row.discount-row .label {
+    color: var(--accent-mint);
+  }
+
+  .audit-row.discount-row .refund-text {
+    color: var(--accent-mint);
+    font-weight: 700;
+  }
+
+  .audit-row.fee-row .fee-text {
+    color: var(--accent-danger);
+    font-weight: 700;
+  }
+
+  .audit-row.subtotal-row {
+    border-top: 1px dashed var(--border-hairline);
+    margin-top: 0.25rem;
+    padding-top: 0.45rem;
+  }
+
+  .audit-row.subtotal-row .label {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .audit-row.subtotal-row .highlight-val {
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  .no-prev-box {
+    padding: 0.85rem 1rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* Step 4 Formula Banner */
+  .total-step {
+    border-color: rgba(199, 245, 59, 0.25);
+  }
+
+  .formula-banner {
+    padding: 0.75rem 1rem;
+    background-color: rgba(199, 245, 59, 0.04);
+    border-top: 1px solid var(--border-hairline);
+  }
+
+  .formula-code {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    word-break: break-all;
+  }
+
+  /* Step 6 Profit Grid */
+  .profit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .profit-card {
+    background-color: var(--surface-primary);
+    border: 1px solid var(--border-hairline);
+    border-radius: 4px;
+    padding: 0.65rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .profit-card.full-width {
+    grid-column: span 2;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-color: rgba(199, 245, 59, 0.25);
+    background-color: rgba(199, 245, 59, 0.04);
+    padding: 0.75rem 1rem;
+  }
+
+  .daily-yield-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .profit-card-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+  }
+
+  .profit-card-value {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  .profit-card-value.accent-mint {
+    color: var(--accent-mint);
+  }
+
+  .profit-card-value.accent-lime {
+    color: var(--accent-primary);
+  }
+
+  .daily-yield-val {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--accent-primary);
+  }
+
+  .profit-card-sub {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+  }
+
+  .daily-yield-sub {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    max-width: 240px;
+    text-align: right;
+  }
+
+  /* Modal Footer */
+  .modal-footer {
+    background-color: var(--surface-elevated);
+    border-top: 1px solid var(--border-hairline);
+    padding: 0.9rem 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .footer-note {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+  }
+
+  .footer-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .btn-copy-discord {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.55rem 0.9rem;
+    border-radius: 4px;
+    background-color: #5865f2;
+    color: #ffffff;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+  }
+
+  .btn-copy-discord:hover {
+    background-color: #4752c4;
+  }
+
+  .btn-copy-discord.copied {
+    background-color: var(--accent-mint);
+    color: #16181c;
+  }
+
+  .btn-modal-close {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.55rem 0.9rem;
+    border-radius: 4px;
+    background-color: var(--surface-primary);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .btn-modal-close:hover {
+    background-color: var(--border-hairline);
+    color: var(--text-primary);
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 640px) {
+    .modal-backdrop {
+      padding: 0.5rem;
+    }
+    .modal-card {
+      max-height: 96vh;
+    }
+    .profit-grid {
+      grid-template-columns: 1fr;
+    }
+    .profit-card.full-width {
+      grid-column: span 1;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.4rem;
+    }
+    .daily-yield-sub {
+      text-align: left;
+      max-width: none;
+    }
+    .modal-footer {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .footer-buttons {
+      flex-direction: column;
+      width: 100%;
+    }
+    .btn-copy-discord, .btn-modal-close {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+
+<script>
+  // TypeScript definition matching backend & RefiningTable
+  interface RefiningMatrixItem {
+    item_id: string;
+    commodity: string;
+    tier: number;
+    enchantment: number;
+    city: string;
+    is_bonus_city: boolean;
+    item_value: number;
+    raw_item_id: string;
+    raw_amount: number;
+    raw_price: number;
+    prev_refined_item_id: string;
+    prev_refined_amount: number;
+    prev_refined_price: number;
+    sell_price: number;
+    station_fee: number;
+    effective_raw_cost: number;
+    effective_prev_cost: number;
+    total_craft_cost: number;
+    gross_revenue: number;
+    sales_tax: number;
+    setup_fee: number;
+    net_revenue: number;
+    profit_without_focus: number;
+    profit_with_focus: number;
+    focus_profit_delta: number;
+    base_focus_cost: number;
+    actual_focus_cost: number;
+    silver_per_focus: number;
+    daily_focus_silver: number;
+    profit_margin_pct: number;
+    rrr: number;
+    is_chained: boolean;
+    traded_volume_24h: number;
+    is_illiquid: boolean;
+    price_age_seconds: number;
+    freshness: string;
+    is_stale: boolean;
+  }
+
+  // Official Albion Online Commodity & Raw Item Names
+  const COMMODITY_NAMES: Record<string, Record<number, string>> = {
+    wood: {
+      3: 'Birch Planks',
+      4: 'Pine Planks',
+      5: 'Cedar Planks',
+      6: 'Bloodoak Planks',
+      7: 'Ashenbark Planks',
+      8: 'Whitewood Planks'
+    },
+    ore: {
+      3: 'Copper Bar',
+      4: 'Bronze Bar',
+      5: 'Steel Bar',
+      6: 'Titanium Bar',
+      7: 'Runite Bar',
+      8: 'Meteorite Bar'
+    },
+    hide: {
+      3: 'Thin Leather',
+      4: 'Medium Leather',
+      5: 'Heavy Leather',
+      6: 'Robust Leather',
+      7: 'Thick Leather',
+      8: 'Reinforced Leather'
+    },
+    fiber: {
+      3: 'Neat Cloth',
+      4: 'Fine Cloth',
+      5: 'Ornate Cloth',
+      6: 'Lavish Cloth',
+      7: 'Opulent Cloth',
+      8: 'Barbed Cloth'
+    },
+    stone: {
+      3: 'Sandstone Block',
+      4: 'Travertine Block',
+      5: 'Granite Block',
+      6: 'Slate Block',
+      7: 'Basalt Block',
+      8: 'Marble Block'
+    }
+  };
+
+  const RAW_NAMES: Record<string, Record<number, string>> = {
+    wood: {
+      4: 'Pine Logs',
+      5: 'Cedar Logs',
+      6: 'Bloodoak Logs',
+      7: 'Ashenbark Logs',
+      8: 'Whitewood Logs'
+    },
+    ore: {
+      4: 'Iron Ore',
+      5: 'Titanium Ore',
+      6: 'Runite Ore',
+      7: 'Meteorite Ore',
+      8: 'Adamantium Ore'
+    },
+    hide: {
+      4: 'Medium Hide',
+      5: 'Heavy Hide',
+      6: 'Robust Hide',
+      7: 'Thick Hide',
+      8: 'Hardened Hide'
+    },
+    fiber: {
+      4: 'Hemp',
+      5: 'Skyflower',
+      6: 'Redleaf Cotton',
+      7: 'Sunflax',
+      8: 'Ghost Hemp'
+    },
+    stone: {
+      4: 'Travertine',
+      5: 'Granite',
+      6: 'Slate',
+      7: 'Basalt',
+      8: 'Marble'
+    }
+  };
+
+  function getItemDisplayName(commodity: string, tier: number, enchantment: number): string {
+    const commKey = commodity.toLowerCase();
+    const baseName = COMMODITY_NAMES[commKey]?.[tier] || `${commodity} T${tier}`;
+    if (enchantment > 0) {
+      return `${baseName} (.${enchantment})`;
+    }
+    return baseName;
+  }
+
+  function getRawDisplayName(commodity: string, tier: number, enchantment: number): string {
+    const commKey = commodity.toLowerCase();
+    const baseName = RAW_NAMES[commKey]?.[tier] || `${commodity} T${tier} Raw`;
+    if (enchantment > 0) {
+      return `${baseName} (.${enchantment})`;
+    }
+    return baseName;
+  }
+
+  function getPrevDisplayName(commodity: string, tier: number, enchantment: number): string {
+    const prevTier = tier - 1;
+    const commKey = commodity.toLowerCase();
+    const baseName = COMMODITY_NAMES[commKey]?.[prevTier] || `${commodity} T${prevTier}`;
+    if (enchantment > 0) {
+      return `${baseName} (.${enchantment})`;
+    }
+    return baseName;
+  }
+
+  function formatSilver(val: number, decimals: number = 2): string {
+    if (isNaN(val) || !isFinite(val)) return '0';
+    const hasFraction = Math.abs(val % 1) > 0.001;
+    const digs = hasFraction ? decimals : 0;
+    return val.toLocaleString('id-ID', {
+      minimumFractionDigits: digs,
+      maximumFractionDigits: digs
+    });
+  }
+
+  function formatNumber(val: number, decimals: number = 2): string {
+    if (isNaN(val) || !isFinite(val)) return '0';
+    return val.toLocaleString('id-ID', {
+      minimumFractionDigits: val % 1 === 0 ? 0 : decimals,
+      maximumFractionDigits: decimals
+    });
+  }
+
+  // Active item in modal
+  let currentItem: RefiningMatrixItem | null = null;
+  let copyTimeoutId: number | null = null;
+
+  // DOM Elements
+  const backdrop = document.getElementById('math-modal-backdrop') as HTMLDivElement | null;
+  const modalCloseBtn = document.getElementById('modal-close-btn') as HTMLButtonElement | null;
+  const modalCloseFooterBtn = document.getElementById('modal-close-footer-btn') as HTMLButtonElement | null;
+  const copyDiscordBtn = document.getElementById('copy-discord-btn') as HTMLButtonElement | null;
+  const copyDiscordText = document.getElementById('copy-discord-text') as HTMLSpanElement | null;
+
+  // Header Elements
+  const modalTierBadge = document.getElementById('modal-tier-badge') as HTMLSpanElement | null;
+  const modalCityBadge = document.getElementById('modal-city-badge') as HTMLSpanElement | null;
+  const modalRrrBadge = document.getElementById('modal-rrr-badge') as HTMLSpanElement | null;
+  const modalChainedBadge = document.getElementById('modal-chained-badge') as HTMLSpanElement | null;
+  const modalItemName = document.getElementById('modal-item-name') as HTMLHeadingElement | null;
+  const modalItemId = document.getElementById('modal-item-id') as HTMLSpanElement | null;
+  const modalCommodityName = document.getElementById('modal-commodity-name') as HTMLSpanElement | null;
+  const modalAgeCaption = document.getElementById('modal-age-caption') as HTMLSpanElement | null;
+
+  // Step 1 Elements
+  const stepRawDesc = document.getElementById('step-raw-desc') as HTMLElement | null;
+  const stepRawNetTotal = document.getElementById('step-raw-net-total') as HTMLElement | null;
+  const rawAmountVal = document.getElementById('raw-amount-val') as HTMLElement | null;
+  const rawPriceVal = document.getElementById('raw-price-val') as HTMLElement | null;
+  const rawGrossVal = document.getElementById('raw-gross-val') as HTMLElement | null;
+  const rawRrrPct = document.getElementById('raw-rrr-pct') as HTMLElement | null;
+  const rawRefundVal = document.getElementById('raw-refund-val') as HTMLElement | null;
+  const rawNetVal = document.getElementById('raw-net-val') as HTMLElement | null;
+
+  // Step 2 Elements
+  const stepPrevDesc = document.getElementById('step-prev-desc') as HTMLElement | null;
+  const stepPrevNetTotal = document.getElementById('step-prev-net-total') as HTMLElement | null;
+  const stepPrevTable = document.getElementById('step-prev-table') as HTMLElement | null;
+  const noPrevBox = document.getElementById('no-prev-box') as HTMLElement | null;
+  const prevAmountVal = document.getElementById('prev-amount-val') as HTMLElement | null;
+  const prevPriceSource = document.getElementById('prev-price-source') as HTMLElement | null;
+  const prevPriceVal = document.getElementById('prev-price-val') as HTMLElement | null;
+  const prevGrossVal = document.getElementById('prev-gross-val') as HTMLElement | null;
+  const prevRrrPct = document.getElementById('prev-rrr-pct') as HTMLElement | null;
+  const prevRefundVal = document.getElementById('prev-refund-val') as HTMLElement | null;
+  const prevNetVal = document.getElementById('prev-net-val') as HTMLElement | null;
+
+  // Step 3 Elements
+  const stepStationFeeTotal = document.getElementById('step-station-fee-total') as HTMLElement | null;
+  const stationIvVal = document.getElementById('station-iv-val') as HTMLElement | null;
+  const stationNutVal = document.getElementById('station-nut-val') as HTMLElement | null;
+  const stationTaxRateVal = document.getElementById('station-tax-rate-val') as HTMLElement | null;
+  const stationFeeVal = document.getElementById('station-fee-val') as HTMLElement | null;
+
+  // Step 4 Elements
+  const totalCraftCostVal = document.getElementById('total-craft-cost-val') as HTMLElement | null;
+  const craftCostEquation = document.getElementById('craft-cost-equation') as HTMLElement | null;
+
+  // Step 5 Elements
+  const stepNetRevTotal = document.getElementById('step-net-rev-total') as HTMLElement | null;
+  const marketSellPriceVal = document.getElementById('market-sell-price-val') as HTMLElement | null;
+  const marketTaxPct = document.getElementById('market-tax-pct') as HTMLElement | null;
+  const marketTaxVal = document.getElementById('market-tax-val') as HTMLElement | null;
+  const marketSetupPct = document.getElementById('market-setup-pct') as HTMLElement | null;
+  const marketSetupVal = document.getElementById('market-setup-val') as HTMLElement | null;
+  const marketNetRevenueVal = document.getElementById('market-net-revenue-val') as HTMLElement | null;
+
+  // Step 6 Elements
+  const stepSpfTotal = document.getElementById('step-spf-total') as HTMLElement | null;
+  const profitNoFocusVal = document.getElementById('profit-no-focus-val') as HTMLElement | null;
+  const profitMarginVal = document.getElementById('profit-margin-val') as HTMLElement | null;
+  const profitWithFocusVal = document.getElementById('profit-with-focus-val') as HTMLElement | null;
+  const profitDeltaVal = document.getElementById('profit-delta-val') as HTMLElement | null;
+  const focusCostVal = document.getElementById('focus-cost-val') as HTMLElement | null;
+  const focusBaseVal = document.getElementById('focus-base-val') as HTMLElement | null;
+  const spfVal = document.getElementById('spf-val') as HTMLElement | null;
+  const dailyFocusVal = document.getElementById('daily-focus-val') as HTMLElement | null;
+
+  function populateModal(item: RefiningMatrixItem) {
+    currentItem = item;
+
+    const tierEnc = `T${item.tier}.${item.enchantment}`;
+    const displayName = getItemDisplayName(item.commodity, item.tier, item.enchantment);
+    const rawDisplayName = getRawDisplayName(item.commodity, item.tier, item.enchantment);
+    const prevDisplayName = getPrevDisplayName(item.commodity, item.tier, item.enchantment);
+
+    // Header updates
+    if (modalTierBadge) {
+      modalTierBadge.textContent = tierEnc;
+      modalTierBadge.className = `tier-pill tier-t${item.tier}`;
+    }
+    if (modalCityBadge) {
+      modalCityBadge.textContent = `${item.city} ${item.is_bonus_city ? '(Bonus City)' : ''}`;
+    }
+    if (modalRrrBadge) {
+      modalRrrBadge.textContent = `${(item.rrr * 100).toFixed(1)}% Base RRR`;
+    }
+    if (modalChainedBadge) {
+      modalChainedBadge.style.display = item.is_chained ? 'inline-block' : 'none';
+    }
+    if (modalItemName) modalItemName.textContent = displayName;
+    if (modalItemId) modalItemId.textContent = item.item_id;
+    if (modalCommodityName) modalCommodityName.textContent = item.commodity;
+
+    if (modalAgeCaption) {
+      const mins = Math.floor(item.price_age_seconds / 60);
+      if (item.price_age_seconds < 60) {
+        modalAgeCaption.textContent = 'Baru saja (< 1m)';
+        modalAgeCaption.style.color = 'var(--accent-mint)';
+      } else if (mins < 15) {
+        modalAgeCaption.textContent = `Segar (${mins}m lalu)`;
+        modalAgeCaption.style.color = 'var(--accent-mint)';
+      } else if (mins <= 60) {
+        modalAgeCaption.textContent = `Waspada (${mins}m lalu)`;
+        modalAgeCaption.style.color = 'var(--accent-amber)';
+      } else {
+        modalAgeCaption.textContent = `KADALUARSA (>60m)`;
+        modalAgeCaption.style.color = 'var(--accent-danger)';
+      }
+    }
+
+    // Step 1: Raw Material
+    const rawGross = item.raw_amount * item.raw_price;
+    const rawRefundUnits = item.raw_amount * item.rrr;
+    const rawRefundSilver = rawGross * item.rrr;
+
+    if (stepRawDesc) {
+      stepRawDesc.textContent = `${item.raw_amount}x ${rawDisplayName} (${item.raw_item_id})`;
+    }
+    if (stepRawNetTotal) stepRawNetTotal.textContent = `${formatSilver(item.effective_raw_cost)} Silver`;
+    if (rawAmountVal) rawAmountVal.textContent = `${item.raw_amount} unit`;
+    if (rawPriceVal) rawPriceVal.textContent = `${formatSilver(item.raw_price, 0)} Silver`;
+    if (rawGrossVal) rawGrossVal.textContent = `${formatSilver(rawGross)} Silver`;
+    if (rawRrrPct) rawRrrPct.textContent = `${(item.rrr * 100).toFixed(1)}%`;
+    if (rawRefundVal) {
+      rawRefundVal.textContent = `-${formatSilver(rawRefundSilver)} Silver (${formatNumber(rawRefundUnits, 2)} unit)`;
+    }
+    if (rawNetVal) rawNetVal.textContent = `${formatSilver(item.effective_raw_cost)} Silver`;
+
+    // Step 2: Previous Tier Refined Material
+    if (item.prev_refined_amount > 0) {
+      if (stepPrevTable) stepPrevTable.style.display = 'flex';
+      if (noPrevBox) noPrevBox.style.display = 'none';
+
+      const prevGross = item.prev_refined_amount * item.prev_refined_price;
+      const prevRefundUnits = item.prev_refined_amount * item.rrr;
+      const prevRefundSilver = prevGross * item.rrr;
+
+      if (stepPrevDesc) {
+        stepPrevDesc.textContent = `${item.prev_refined_amount}x ${prevDisplayName} (${item.prev_refined_item_id})`;
+      }
+      if (stepPrevNetTotal) stepPrevNetTotal.textContent = `${formatSilver(item.effective_prev_cost)} Silver`;
+      if (prevAmountVal) prevAmountVal.textContent = `${item.prev_refined_amount} unit`;
+      if (prevPriceSource) {
+        prevPriceSource.textContent = item.is_chained ? 'Chained Craft Cost' : 'Harga Pasar';
+      }
+      if (prevPriceVal) prevPriceVal.textContent = `${formatSilver(item.prev_refined_price, 0)} Silver`;
+      if (prevGrossVal) prevGrossVal.textContent = `${formatSilver(prevGross)} Silver`;
+      if (prevRrrPct) prevRrrPct.textContent = `${(item.rrr * 100).toFixed(1)}%`;
+      if (prevRefundVal) {
+        prevRefundVal.textContent = `-${formatSilver(prevRefundSilver)} Silver (${formatNumber(prevRefundUnits, 2)} unit)`;
+      }
+      if (prevNetVal) prevNetVal.textContent = `${formatSilver(item.effective_prev_cost)} Silver`;
+    } else {
+      if (stepPrevTable) stepPrevTable.style.display = 'none';
+      if (noPrevBox) noPrevBox.style.display = 'block';
+      if (stepPrevDesc) stepPrevDesc.textContent = 'Tidak memerlukan bahan tier sebelumnya (Base)';
+      if (stepPrevNetTotal) stepPrevNetTotal.textContent = '0 Silver';
+      if (prevNetVal) prevNetVal.textContent = '0 Silver';
+    }
+
+    // Step 3: Station Fee
+    const nutrition = item.item_value * 0.1125;
+    const stationTaxRate = nutrition > 0 ? (item.station_fee * 100) / nutrition : 0;
+
+    if (stepStationFeeTotal) stepStationFeeTotal.textContent = `${formatSilver(item.station_fee)} Silver`;
+    if (stationIvVal) stationIvVal.textContent = `${item.item_value}`;
+    if (stationNutVal) stationNutVal.textContent = `${formatNumber(nutrition, 2)} Nutrition`;
+    if (stationTaxRateVal) stationTaxRateVal.textContent = `${Math.round(stationTaxRate)} Silver / 100 Nut`;
+    if (stationFeeVal) stationFeeVal.textContent = `${formatSilver(item.station_fee)} Silver`;
+
+    // Step 4: Total Craft Cost
+    if (totalCraftCostVal) totalCraftCostVal.textContent = `${formatSilver(item.total_craft_cost)} Silver`;
+    if (craftCostEquation) {
+      craftCostEquation.textContent = `${formatSilver(item.effective_raw_cost)} (Raw) + ${formatSilver(item.effective_prev_cost)} (Prev) + ${formatSilver(item.station_fee)} (Fee) = ${formatSilver(item.total_craft_cost)} Silver`;
+    }
+
+    // Step 5: Sales & Market Taxes
+    const taxRatePct = item.gross_revenue > 0 ? (item.sales_tax / item.gross_revenue) * 100 : 0;
+    const setupRatePct = item.gross_revenue > 0 ? (item.setup_fee / item.gross_revenue) * 100 : 0;
+
+    if (stepNetRevTotal) stepNetRevTotal.textContent = `${formatSilver(item.net_revenue)} Silver`;
+    if (marketSellPriceVal) marketSellPriceVal.textContent = `${formatSilver(item.sell_price, 0)} Silver`;
+    if (marketTaxPct) marketTaxPct.textContent = `${taxRatePct.toFixed(1)}%`;
+    if (marketTaxVal) marketTaxVal.textContent = `-${formatSilver(item.sales_tax)} Silver`;
+    if (marketSetupPct) marketSetupPct.textContent = `${setupRatePct.toFixed(1)}%`;
+    if (marketSetupVal) marketSetupVal.textContent = `-${formatSilver(item.setup_fee)} Silver`;
+    if (marketNetRevenueVal) marketNetRevenueVal.textContent = `${formatSilver(item.net_revenue)} Silver`;
+
+    // Step 6: Profit & Focus Efficiency
+    const profitSign = item.profit_without_focus >= 0 ? '+' : '';
+    const focusSign = item.profit_with_focus >= 0 ? '+' : '';
+    const deltaSign = item.focus_profit_delta >= 0 ? '+' : '';
+
+    if (stepSpfTotal) stepSpfTotal.textContent = `${item.silver_per_focus.toFixed(1)} SPF`;
+    if (profitNoFocusVal) {
+      profitNoFocusVal.textContent = `${profitSign}${formatSilver(item.profit_without_focus)} Silver`;
+      profitNoFocusVal.style.color = item.profit_without_focus >= 0 ? 'var(--accent-mint)' : 'var(--accent-danger)';
+    }
+    if (profitMarginVal) {
+      profitMarginVal.textContent = `Margin: ${item.profit_margin_pct.toFixed(1)}%`;
+    }
+    if (profitWithFocusVal) {
+      profitWithFocusVal.textContent = `${focusSign}${formatSilver(item.profit_with_focus)} Silver`;
+    }
+    if (profitDeltaVal) {
+      profitDeltaVal.textContent = `${deltaSign}${formatSilver(item.focus_profit_delta)} Silver bonus`;
+    }
+    if (focusCostVal) focusCostVal.textContent = `${item.actual_focus_cost} FP`;
+    if (focusBaseVal) focusBaseVal.textContent = `Base: ${item.base_focus_cost} FP`;
+    if (spfVal) spfVal.textContent = `${item.silver_per_focus.toFixed(1)} Silver/FP`;
+    if (dailyFocusVal) {
+      dailyFocusVal.textContent = `${profitSign}${formatSilver(item.daily_focus_silver, 0)} Silver / hari`;
+    }
+  }
+
+  function generateDiscordMarkdown(item: RefiningMatrixItem): string {
+    const tierEnc = `T${item.tier}.${item.enchantment}`;
+    const displayName = getItemDisplayName(item.commodity, item.tier, item.enchantment);
+    const rawDisplayName = getRawDisplayName(item.commodity, item.tier, item.enchantment);
+    const prevDisplayName = getPrevDisplayName(item.commodity, item.tier, item.enchantment);
+
+    const rawGross = item.raw_amount * item.raw_price;
+    const rawRefundUnits = item.raw_amount * item.rrr;
+    const rawRefundSilver = rawGross * item.rrr;
+
+    const nutrition = item.item_value * 0.1125;
+    const stationTaxRate = nutrition > 0 ? (item.station_fee * 100) / nutrition : 0;
+    const taxRatePct = item.gross_revenue > 0 ? (item.sales_tax / item.gross_revenue) * 100 : 0;
+    const setupRatePct = item.gross_revenue > 0 ? (item.setup_fee / item.gross_revenue) * 100 : 0;
+
+    const prevBlock = item.prev_refined_amount > 0
+      ? `2. BAHAN OLAHAN TIER SEBELUMNYA (PREV TIER):
+   • ${item.prev_refined_amount}x ${prevDisplayName} [${item.prev_refined_item_id}]
+   • Biaya Acuan (${item.is_chained ? 'Chained Craft' : 'Pasar'}): ${formatSilver(item.prev_refined_price, 0)} Silver / unit
+   • Biaya Kotor: ${formatSilver(item.prev_refined_amount * item.prev_refined_price)} Silver
+   • RRR Refund (${(item.rrr * 100).toFixed(1)}%): -${formatSilver(item.prev_refined_amount * item.prev_refined_price * item.rrr)} Silver (${formatNumber(item.prev_refined_amount * item.rrr, 2)} unit)
+   • Biaya Bersih T-1: ${formatSilver(item.effective_prev_cost)} Silver`
+      : `2. BAHAN OLAHAN TIER SEBELUMNYA (PREV TIER):
+   • Tidak memerlukan bahan olahan tier sebelumnya (0 unit)
+   • Biaya Bersih T-1: 0 Silver`;
+
+    const signNoFocus = item.profit_without_focus >= 0 ? '+' : '';
+    const signFocus = item.profit_with_focus >= 0 ? '+' : '';
+    const signDelta = item.focus_profit_delta >= 0 ? '+' : '';
+
+    return `\`\`\`text
+============================================================
+ [ALBIONFLOW] REFINING AUDIT: ${tierEnc} ${displayName}
+ Lokasi: ${item.city} (Bonus Kota: RRR ${(item.rrr * 100).toFixed(1)}%)
+ Komoditas: ${item.commodity} | Item ID: ${item.item_id}
+============================================================
+
+1. BAHAN MENTAH (RAW MATERIAL):
+   • ${item.raw_amount}x ${rawDisplayName} [${item.raw_item_id}]
+   • Harga Beli Pasar: ${formatSilver(item.raw_price, 0)} Silver / unit
+   • Total Biaya Kotor: ${formatSilver(rawGross)} Silver
+   • RRR Refund (${(item.rrr * 100).toFixed(1)}%): -${formatSilver(rawRefundSilver)} Silver (${formatNumber(rawRefundUnits, 2)} unit kembali)
+   • Biaya Bersih Bahan Mentah: ${formatSilver(item.effective_raw_cost)} Silver
+
+${prevBlock}
+
+3. ONGKOS TUKANG TEMPA (STATION NUTRITION FEE):
+   • Nilai Item Dasar (IV): ${item.item_value}
+   • Nutrisi Dikonsumsi: ${formatNumber(nutrition, 2)} Nutrition (IV x 0.1125)
+   • Tarif Pajak Tukang: ${Math.round(stationTaxRate)} Silver / 100 Nutrisi
+   • Total Biaya Tukang: ${formatSilver(item.station_fee)} Silver
+
+4. TOTAL MODAL PRODUKSI (CRAFT COST):
+   • Net Raw (${formatSilver(item.effective_raw_cost)}) + Net Prev (${formatSilver(item.effective_prev_cost)}) + Station Fee (${formatSilver(item.station_fee)})
+   • TOTAL MODAL: ${formatSilver(item.total_craft_cost)} Silver / unit
+
+5. PENJUALAN & PAJAK PASAR:
+   • Harga Jual Target: ${formatSilver(item.sell_price, 0)} Silver
+   • Pajak Penjualan (${taxRatePct.toFixed(1)}%): -${formatSilver(item.sales_tax)} Silver
+   • Biaya Pasang Order (${setupRatePct.toFixed(1)}%): -${formatSilver(item.setup_fee)} Silver
+   • Pendapatan Bersih (Net Revenue): ${formatSilver(item.net_revenue)} Silver
+
+6. KEUNTUNGAN & EFISIENSI FOCUS:
+   • Profit Bersih (Tanpa Focus): ${signNoFocus}${formatSilver(item.profit_without_focus)} Silver (Margin: ${item.profit_margin_pct.toFixed(1)}%)
+   • Profit Bersih (Dengan Focus 53.9% RRR): ${signFocus}${formatSilver(item.profit_with_focus)} Silver
+   • Keuntungan Ekstra dari Focus: ${signDelta}${formatSilver(item.focus_profit_delta)} Silver
+   • Kebutuhan Focus Point: ${item.actual_focus_cost} FP (Base: ${item.base_focus_cost} FP)
+   • Silver per Focus (SPF): ${item.silver_per_focus.toFixed(1)} Silver / FP
+   • Estimasi Yield 10,000 Focus: ${signNoFocus}${formatSilver(item.daily_focus_silver, 0)} Silver / hari
+============================================================
+Generated by AlbionFlow — Anti-Arbitrage Engine
+\`\`\``;
+  }
+
+  function openModal() {
+    if (!backdrop) return;
+    backdrop.classList.remove('modal-hidden');
+    backdrop.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    if (modalCloseBtn) modalCloseBtn.focus();
+  }
+
+  function closeModal() {
+    if (!backdrop) return;
+    backdrop.classList.add('modal-hidden');
+    backdrop.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  // Copy to clipboard handler
+  async function handleCopyDiscord() {
+    if (!currentItem || !copyDiscordBtn || !copyDiscordText) return;
+
+    const markdownText = generateDiscordMarkdown(currentItem);
+
+    let copySuccess = false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(markdownText);
+        copySuccess = true;
+      } catch (err) {
+        console.warn('Clipboard API writeText failed, falling back to execCommand:', err);
+      }
+    }
+
+    if (!copySuccess) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = markdownText;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        copySuccess = (document as any).execCommand('copy');
+        document.body.removeChild(textarea);
+      } catch (err) {
+        console.error('Fallback execCommand copy failed:', err);
+      }
+    }
+
+    if (copySuccess) {
+      if (copyTimeoutId) clearTimeout(copyTimeoutId);
+      copyDiscordBtn.classList.add('copied');
+      copyDiscordText.textContent = '✓ Tersalin ke Clipboard!';
+      copyTimeoutId = window.setTimeout(() => {
+        copyDiscordBtn.classList.remove('copied');
+        copyDiscordText.textContent = 'Salin Ringkasan (Discord/Guild)';
+      }, 2500);
+    }
+  }
+
+  // Initialize listeners
+  function initModal() {
+    // Listen for custom event from RefiningTable
+    window.addEventListener('open-math-modal', ((e: CustomEvent) => {
+      if (e.detail) {
+        populateModal(e.detail);
+        openModal();
+      }
+    }) as EventListener);
+
+    // Close button listeners
+    if (modalCloseBtn) {
+      modalCloseBtn.addEventListener('click', closeModal);
+    }
+    if (modalCloseFooterBtn) {
+      modalCloseFooterBtn.addEventListener('click', closeModal);
+    }
+
+    // Overlay click listener
+    if (backdrop) {
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) {
+          closeModal();
+        }
+      });
+    }
+
+    // Escape key listener
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && backdrop && !backdrop.classList.contains('modal-hidden')) {
+        closeModal();
+      }
+    });
+
+    // Copy Discord button listener
+    if (copyDiscordBtn) {
+      copyDiscordBtn.addEventListener('click', handleCopyDiscord);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initModal);
+  } else {
+    initModal();
+  }
+</script>

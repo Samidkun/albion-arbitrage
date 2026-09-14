@@ -3,6 +3,7 @@
 import Layout from '../layouts/Layout.astro';
 import ControlBar from '../components/ControlBar.astro';
 import RefiningTable from '../components/RefiningTable.astro';
+import ShowTheMathModal from '../components/ShowTheMathModal.astro';
 ---
 
 <Layout title="AlbionFlow — Refining Optimizer">
@@ -27,6 +28,9 @@ import RefiningTable from '../components/RefiningTable.astro';
     <!-- Refining Matrix Table Component (Task 3.2) -->
     <RefiningTable />
   </section>
+
+  <!-- Step-by-Step Calculation Audit Modal (Task 3.3) -->
+  <ShowTheMathModal />
 </Layout>
 
 <style>
