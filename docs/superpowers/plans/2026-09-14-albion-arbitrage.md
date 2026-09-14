@@ -109,10 +109,10 @@ Files:
 - Create: `backend/pkg/engine/focus.go`
 - Test: `backend/pkg/engine/focus_test.go`
 
-- [ ] **Step 1: Map base focus cost per tier and enchantment level**
-- [ ] **Step 2: Calculate Silver per Focus (SPF) metric: `(ProfitWithFocus - ProfitWithoutFocus) / FocusSpent`**
-- [ ] **Step 3: Write unit tests checking SPF ranking against ground truth**
-- [ ] **Step 4: Commit:** `feat(backend): silver per focus efficiency calculator`
+- [x] **Step 1: Map base focus cost per tier and enchantment level**
+- [x] **Step 2: Calculate Silver per Focus (SPF) metric: `(ProfitWithFocus - ProfitWithoutFocus) / FocusSpent`**
+- [x] **Step 3: Write unit tests checking SPF ranking against ground truth**
+- [x] **Step 4: Commit:** `feat(backend): silver per focus efficiency calculator`
 
 ---
 
