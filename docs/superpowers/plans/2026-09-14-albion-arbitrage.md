@@ -58,11 +58,11 @@ Files:
 - Create: `backend/pkg/store/prices.go`
 - Test: `backend/pkg/store/prices_test.go`
 
-- [ ] **Step 1: Initialize pure-Go SQLite with WAL mode (`PRAGMA journal_mode = WAL`)**
-- [ ] **Step 2: Create `price_snapshots` table with composite index `(region, item_id, city, recorded_at)`**
-- [ ] **Step 3: Implement upsert and query functions with data age calculation**
-- [ ] **Step 4: Write tests for price insertion, retrieval, and age filtering**
-- [ ] **Step 5: Commit:** `feat(backend): sqlite storage engine with price snapshot and age index`
+- [x] **Step 1: Initialize pure-Go SQLite with WAL mode (`PRAGMA journal_mode = WAL`)**
+- [x] **Step 2: Create `price_snapshots` table with composite index `(region, item_id, city, recorded_at)`**
+- [x] **Step 3: Implement upsert and query functions with data age calculation**
+- [x] **Step 4: Write tests for price insertion, retrieval, and age filtering**
+- [x] **Step 5: Commit:** `feat(backend): sqlite storage engine with price snapshot and age index`
 
 ---
 
