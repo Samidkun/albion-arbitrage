@@ -40,15 +40,15 @@
 ---
 
 ### Task 0.2: Item Metadata Catalog & Stone Exception Handling
-**Files:**
+Files:
 - Create: `backend/pkg/model/items.go`
 - Create: `backend/pkg/model/items_test.go`
 
-- [ ] **Step 1: Define commodity types (Wood, Ore, Hide, Fiber, Stone), T4-T8 tiers, and .0 to .4 enchantments**
-- [ ] **Step 2: Implement stone exception logic (Stone blocks do not support .1-.4 enchantments)**
-- [ ] **Step 3: Map Item Values (IV) and raw/refined input ratios according to Albion Wiki data**
-- [ ] **Step 4: Write tests verifying recipe lookups and stone exception constraints**
-- [ ] **Step 5: Commit:** `feat(backend): item metadata catalog with stone exception handling`
+- [x] **Step 1: Define commodity types (Wood, Ore, Hide, Fiber, Stone), T4-T8 tiers, and .0 to .4 enchantments**
+- [x] **Step 2: Implement stone exception logic (Stone blocks do not support .1-.4 enchantments)**
+- [x] **Step 3: Map Item Values (IV) and raw/refined input ratios according to Albion Wiki data**
+- [x] **Step 4: Write tests verifying recipe lookups and stone exception constraints**
+- [x] **Step 5: Commit:** `feat(backend): item metadata catalog with stone exception handling`
 
 ---
 
