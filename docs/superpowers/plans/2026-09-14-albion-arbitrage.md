@@ -238,7 +238,7 @@ Files:
 - Create: `docs/DEVELOPER_RUNBOOK.md` (Math proofs, API reference, data pipeline maintenance)
 - Update: `README.md`
 
-- [ ] **Step 1: Write END_USER_GUIDE.md**
-- [ ] **Step 2: Write DEVELOPER_RUNBOOK.md**
-- [ ] **Step 3: Update README.md with quickstart commands**
-- [ ] **Step 4: Commit:** `docs: add end-user guide, developer runbook, and quickstart docs`
+- [x] **Step 1: Write END_USER_GUIDE.md**
+- [x] **Step 2: Write DEVELOPER_RUNBOOK.md**
+- [x] **Step 3: Update README.md with quickstart commands**
+- [x] **Step 4: Commit:** `docs: add end-user guide, developer runbook, and quickstart docs`
