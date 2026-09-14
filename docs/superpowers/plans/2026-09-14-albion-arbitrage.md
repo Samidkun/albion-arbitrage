@@ -149,10 +149,10 @@ Files:
 - Create: `backend/pkg/aodp/guard.go`
 - Test: `backend/pkg/aodp/guard_test.go`
 
-- [ ] **Step 1: Implement age categorizer: `<30m` Fresh, `30-60m` Aging, `>60m` Stale**
-- [ ] **Step 2: Automatically exclude stale quotes from top recommendations unless explicitly bypassed**
-- [ ] **Step 3: Write unit tests for freshness classification**
-- [ ] **Step 4: Commit:** `feat(backend): data freshness guard and stale price filter`
+- [x] **Step 1: Implement age categorizer: `<30m` Fresh, `30-60m` Aging, `>60m` Stale**
+- [x] **Step 2: Automatically exclude stale quotes from top recommendations unless explicitly bypassed**
+- [x] **Step 3: Write unit tests for freshness classification**
+- [x] **Step 4: Commit:** `feat(backend): data freshness guard and stale price filter`
 
 ---
 
