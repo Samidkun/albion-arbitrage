@@ -1,0 +1,514 @@
+---
+// ControlBar.astro - Global Filtering & Economic Parameter Controls
+---
+
+<div class="control-bar-container" id="global-control-bar">
+  <!-- Commodity & Tier Selection Bar -->
+  <div class="control-row filter-row">
+    <div class="control-group commodity-group">
+      <span class="control-label">COMMODITY:</span>
+      <div class="pill-group" role="group" aria-label="Commodity Filter" id="commodity-filters">
+        <button type="button" class="pill-btn active" data-commodity="ALL">All</button>
+        <button type="button" class="pill-btn" data-commodity="WOOD">
+          <span class="commodity-name">Wood</span>
+          <span class="city-badge">Fort Sterling</span>
+        </button>
+        <button type="button" class="pill-btn" data-commodity="ORE">
+          <span class="commodity-name">Ore</span>
+          <span class="city-badge">Thetford</span>
+        </button>
+        <button type="button" class="pill-btn" data-commodity="FIBER">
+          <span class="commodity-name">Fiber</span>
+          <span class="city-badge">Lymhurst</span>
+        </button>
+        <button type="button" class="pill-btn" data-commodity="HIDE">
+          <span class="commodity-name">Hide</span>
+          <span class="city-badge">Martlock</span>
+        </button>
+        <button type="button" class="pill-btn" data-commodity="STONE">
+          <span class="commodity-name">Stone</span>
+          <span class="city-badge">Bridgewatch</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="control-group tier-group">
+      <span class="control-label">TIER:</span>
+      <div class="pill-group" role="group" aria-label="Tier Filter" id="tier-filters">
+        <button type="button" class="pill-btn active" data-tier="ALL">All</button>
+        <button type="button" class="pill-btn" data-tier="T4">T4</button>
+        <button type="button" class="pill-btn" data-tier="T5">T5</button>
+        <button type="button" class="pill-btn" data-tier="T6">T6</button>
+        <button type="button" class="pill-btn" data-tier="T7">T7</button>
+        <button type="button" class="pill-btn" data-tier="T8">T8</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Economic Parameters & Tax Configuration Bar -->
+  <div class="control-row param-row">
+    <!-- Station Tax Slider -->
+    <div class="param-block slider-block">
+      <div class="param-header">
+        <label for="station-tax-input" class="control-label">STATION TAX:</label>
+        <span class="tax-value-wrapper tabular-figures">
+          <span id="station-tax-display">600</span>
+          <span class="unit">Silver / 100 Nut</span>
+        </span>
+      </div>
+      <div class="slider-wrapper">
+        <span class="slider-bound tabular-figures">200</span>
+        <input
+          type="range"
+          id="station-tax-input"
+          min="200"
+          max="2000"
+          step="25"
+          value="600"
+          class="tax-slider"
+          aria-label="Station Fee per 100 nutrition"
+        />
+        <span class="slider-bound tabular-figures">2000</span>
+      </div>
+    </div>
+
+    <!-- Sales Tax Channel Selector -->
+    <div class="param-block select-block">
+      <label for="tax-channel-select" class="control-label">SALES TAX CHANNEL:</label>
+      <div class="select-wrapper">
+        <select id="tax-channel-select" class="custom-select" aria-label="Sales Tax Channel">
+          <option value="sell_order" selected>Sell Order (2.5% setup + 4% tax)</option>
+          <option value="instant_buy">Instant Fill Buy Order (4% tax)</option>
+          <option value="direct_trade">Direct Guild/Discord Trade (0% tax)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Premium Status Toggle -->
+    <div class="param-block toggle-block">
+      <span class="control-label">PREMIUM STATUS:</span>
+      <button
+        type="button"
+        id="premium-toggle-btn"
+        class="toggle-btn active"
+        role="switch"
+        aria-checked="true"
+      >
+        <span class="toggle-indicator"></span>
+        <span id="premium-status-label" class="tabular-figures">Premium Active (4% Tax)</span>
+      </button>
+    </div>
+
+    <!-- Chained Refining Toggle -->
+    <div class="param-block toggle-block">
+      <span class="control-label">CHAINED INTERMEDIATE:</span>
+      <button
+        type="button"
+        id="chained-toggle-btn"
+        class="toggle-btn active"
+        role="switch"
+        aria-checked="true"
+        title="Craft sub-tier inputs yourself to avoid paying intermediate market taxes"
+      >
+        <span class="toggle-indicator"></span>
+        <span>Craft Sub-Tiers Yourself (0% Intermediate Tax)</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .control-bar-container {
+    background-color: var(--surface-primary);
+    border: 1px solid var(--border-hairline);
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-row {
+    border-bottom: 1px solid var(--border-hairline);
+    padding-bottom: 0.85rem;
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .control-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  .pill-group {
+    display: inline-flex;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-hairline);
+    border-radius: 3px;
+    padding: 2px;
+    gap: 2px;
+    flex-wrap: wrap;
+  }
+
+  .pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: 0.25rem 0.55rem;
+    border-radius: 2px;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+
+  .pill-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--surface-elevated);
+  }
+
+  .pill-btn.active {
+    background-color: var(--surface-elevated);
+    color: var(--accent-primary);
+    border-color: var(--border-hairline);
+    font-weight: 700;
+  }
+
+  .city-badge {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    background-color: var(--surface-primary);
+    padding: 0.05rem 0.3rem;
+    border-radius: 2px;
+    border: 1px solid var(--border-hairline);
+  }
+
+  .pill-btn.active .city-badge {
+    color: var(--accent-mint);
+    border-color: rgba(78, 229, 182, 0.25);
+  }
+
+  .param-row {
+    display: grid;
+    grid-template-columns: 1.1fr 1.3fr 1fr 1.4fr;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .param-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .param-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .tax-value-wrapper {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+  }
+
+  .tax-value-wrapper .unit {
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-left: 0.25rem;
+  }
+
+  .slider-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .slider-bound {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    user-select: none;
+  }
+
+  .tax-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface-elevated);
+    outline: none;
+    border: 1px solid var(--border-hairline);
+  }
+
+  .tax-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--accent-primary);
+    cursor: pointer;
+    border: 1px solid #16181C;
+    transition: transform 0.1s ease;
+  }
+
+  .tax-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+
+  .tax-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--accent-primary);
+    cursor: pointer;
+    border: 1px solid #16181C;
+  }
+
+  .select-wrapper {
+    position: relative;
+  }
+
+  .custom-select {
+    width: 100%;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    padding: 0.35rem 0.6rem;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+
+  .custom-select:hover,
+  .custom-select:focus {
+    border-color: var(--accent-primary);
+  }
+
+  .toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-hairline);
+    border-radius: 3px;
+    padding: 0.35rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+    text-align: left;
+  }
+
+  .toggle-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hairline);
+  }
+
+  .toggle-btn.active {
+    background-color: var(--surface-elevated);
+    border-color: var(--border-hairline);
+    color: var(--text-primary);
+  }
+
+  .toggle-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background-color: var(--border-hairline);
+    flex-shrink: 0;
+    transition: background-color 0.15s ease;
+  }
+
+  .toggle-btn.active .toggle-indicator {
+    background-color: var(--accent-primary);
+  }
+
+  @media (max-width: 1100px) {
+    .param-row {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .param-row {
+      grid-template-columns: 1fr;
+    }
+    .control-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>
+
+<script>
+  // AlbionFlow Global Control Bar State Engine
+  function initControlBar() {
+    const commodityBtns = document.querySelectorAll<HTMLButtonElement>('#commodity-filters .pill-btn');
+    const tierBtns = document.querySelectorAll<HTMLButtonElement>('#tier-filters .pill-btn');
+    const stationTaxInput = document.getElementById('station-tax-input') as HTMLInputElement | null;
+    const stationTaxDisplay = document.getElementById('station-tax-display');
+    const taxChannelSelect = document.getElementById('tax-channel-select') as HTMLSelectElement | null;
+    const premiumToggleBtn = document.getElementById('premium-toggle-btn') as HTMLButtonElement | null;
+    const premiumStatusLabel = document.getElementById('premium-status-label');
+    const chainedToggleBtn = document.getElementById('chained-toggle-btn') as HTMLButtonElement | null;
+
+    // Load state from localStorage or defaults
+    const state = {
+      commodity: localStorage.getItem('albionflow_commodity') || 'ALL',
+      tier: localStorage.getItem('albionflow_tier') || 'ALL',
+      stationTax: parseInt(localStorage.getItem('albionflow_station_tax') || '600', 10),
+      taxChannel: localStorage.getItem('albionflow_tax_channel') || 'sell_order',
+      premium: localStorage.getItem('albionflow_premium') !== 'false', // default true
+      chained: localStorage.getItem('albionflow_chained') !== 'false', // default true
+    };
+
+    function notifyChange() {
+      // Persist to storage
+      localStorage.setItem('albionflow_commodity', state.commodity);
+      localStorage.setItem('albionflow_tier', state.tier);
+      localStorage.setItem('albionflow_station_tax', state.stationTax.toString());
+      localStorage.setItem('albionflow_tax_channel', state.taxChannel);
+      localStorage.setItem('albionflow_premium', state.premium ? 'true' : 'false');
+      localStorage.setItem('albionflow_chained', state.chained ? 'true' : 'false');
+
+      // Dispatch global custom event for table components
+      window.dispatchEvent(
+        new CustomEvent('albionflow:filter-changed', {
+          detail: { ...state }
+        })
+      );
+    }
+
+    // Initialize Commodity buttons
+    commodityBtns.forEach((btn) => {
+      if (btn.dataset.commodity === state.commodity) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+      btn.addEventListener('click', () => {
+        state.commodity = btn.dataset.commodity || 'ALL';
+        commodityBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        notifyChange();
+      });
+    });
+
+    // Initialize Tier buttons
+    tierBtns.forEach((btn) => {
+      if (btn.dataset.tier === state.tier) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+      btn.addEventListener('click', () => {
+        state.tier = btn.dataset.tier || 'ALL';
+        tierBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        notifyChange();
+      });
+    });
+
+    // Initialize Station Tax Slider
+    if (stationTaxInput && stationTaxDisplay) {
+      stationTaxInput.value = state.stationTax.toString();
+      stationTaxDisplay.textContent = state.stationTax.toString();
+
+      stationTaxInput.addEventListener('input', () => {
+        const val = parseInt(stationTaxInput.value, 10);
+        state.stationTax = val;
+        stationTaxDisplay.textContent = val.toString();
+        notifyChange();
+      });
+    }
+
+    // Initialize Tax Channel Select
+    if (taxChannelSelect) {
+      taxChannelSelect.value = state.taxChannel;
+      taxChannelSelect.addEventListener('change', () => {
+        state.taxChannel = taxChannelSelect.value;
+        notifyChange();
+      });
+    }
+
+    // Initialize Premium Toggle
+    if (premiumToggleBtn && premiumStatusLabel) {
+      const updatePremiumUI = () => {
+        if (state.premium) {
+          premiumToggleBtn.classList.add('active');
+          premiumToggleBtn.setAttribute('aria-checked', 'true');
+          premiumStatusLabel.textContent = 'Premium Active (4% Tax)';
+        } else {
+          premiumToggleBtn.classList.remove('active');
+          premiumToggleBtn.setAttribute('aria-checked', 'false');
+          premiumStatusLabel.textContent = 'Non-Premium (8% Tax)';
+        }
+      };
+      updatePremiumUI();
+
+      premiumToggleBtn.addEventListener('click', () => {
+        state.premium = !state.premium;
+        updatePremiumUI();
+        notifyChange();
+      });
+    }
+
+    // Initialize Chained Intermediate Toggle
+    if (chainedToggleBtn) {
+      const updateChainedUI = () => {
+        if (state.chained) {
+          chainedToggleBtn.classList.add('active');
+          chainedToggleBtn.setAttribute('aria-checked', 'true');
+        } else {
+          chainedToggleBtn.classList.remove('active');
+          chainedToggleBtn.setAttribute('aria-checked', 'false');
+        }
+      };
+      updateChainedUI();
+
+      chainedToggleBtn.addEventListener('click', () => {
+        state.chained = !state.chained;
+        updateChainedUI();
+        notifyChange();
+      });
+    }
+
+    // Initial broadcast of loaded controls state
+    notifyChange();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initControlBar);
+  } else {
+    initControlBar();
+  }
+</script>

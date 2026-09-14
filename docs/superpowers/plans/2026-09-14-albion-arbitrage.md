@@ -179,10 +179,10 @@ Files:
 - Create: `frontend/src/components/Header.astro`
 - Create: `frontend/src/components/ControlBar.astro`
 
-- [ ] **Step 1: Setup Clean Dark theme tokens (`#16181C`, hairline `#2A2E35`, electric lime `#C7F53B`)**
-- [ ] **Step 2: Implement Region Selector (Asia / Americas / Europe) with instant state toggle**
-- [ ] **Step 3: Implement Station Tax Slider & Tax Channel Selector (0%, 2.5%, 4%, 8%)**
-- [ ] **Step 4: Commit:** `feat(frontend): dark console layout with region switcher and parameter controls`
+- [x] **Step 1: Setup Clean Dark theme tokens (`#16181C`, hairline `#2A2E35`, electric lime `#C7F53B`)**
+- [x] **Step 2: Implement Region Selector (Asia / Americas / Europe) with instant state toggle**
+- [x] **Step 3: Implement Station Tax Slider & Tax Channel Selector (0%, 2.5%, 4%, 8%)**
+- [x] **Step 4: Commit:** `feat(frontend): dark console layout with region switcher and parameter controls`
 
 ---
 
