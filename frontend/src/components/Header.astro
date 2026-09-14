@@ -273,6 +273,11 @@ const isArbitrage = pathname.startsWith('/arbitrage');
           detail: { region }
         })
       );
+      window.dispatchEvent(
+        new CustomEvent('region-change', {
+          detail: { region }
+        })
+      );
     }
 
     // Apply active region on init

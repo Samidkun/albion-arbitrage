@@ -2,6 +2,7 @@
 // AlbionFlow - Refining Optimizer
 import Layout from '../layouts/Layout.astro';
 import ControlBar from '../components/ControlBar.astro';
+import RefiningTable from '../components/RefiningTable.astro';
 ---
 
 <Layout title="AlbionFlow — Refining Optimizer">
@@ -23,15 +24,8 @@ import ControlBar from '../components/ControlBar.astro';
       </div>
     </header>
 
-    <!-- Table container slot (Task 3.2 RefiningTable target) -->
-    <div id="refining-table-root" class="table-placeholder">
-      <div class="placeholder-content">
-        <p class="placeholder-title">Refining Table Standby</p>
-        <p class="placeholder-desc">
-          Refining matrix calculations and Silver per Focus rankings will render here.
-        </p>
-      </div>
-    </div>
+    <!-- Refining Matrix Table Component (Task 3.2) -->
+    <RefiningTable />
   </section>
 </Layout>
 
@@ -86,34 +80,5 @@ import ControlBar from '../components/ControlBar.astro';
     height: 6px;
     border-radius: 50%;
     background-color: var(--accent-mint);
-  }
-
-  .table-placeholder {
-    min-height: 240px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px dashed var(--border-hairline);
-    border-radius: 4px;
-    background-color: rgba(30, 34, 40, 0.4);
-  }
-
-  .placeholder-content {
-    text-align: center;
-    max-width: 480px;
-    padding: 1.5rem;
-  }
-
-  .placeholder-title {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.35rem;
-  }
-
-  .placeholder-desc {
-    font-size: 0.8rem;
-    color: var(--text-muted);
   }
 </style>

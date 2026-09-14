@@ -406,6 +406,11 @@
           detail: { ...state }
         })
       );
+      window.dispatchEvent(
+        new CustomEvent('control-bar-change', {
+          detail: { ...state }
+        })
+      );
     }
 
     // Initialize Commodity buttons

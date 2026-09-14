@@ -1,0 +1,1866 @@
+---
+// RefiningTable.astro - High-Density Refining Matrix Table with SPF Ranking & Volume Indicators
+---
+
+<div class="refining-table-container panel" id="refining-table-container">
+  <!-- Table Toolbar -->
+  <div class="table-toolbar">
+    <div class="toolbar-left">
+      <div class="table-headline">
+        <span class="toolbar-title">REFINING MATRIX</span>
+        <span class="count-badge tabular-figures" id="items-count-badge">0 Items</span>
+      </div>
+      <div class="source-status" id="source-status-badge">
+        <span class="status-dot"></span>
+        <span class="status-label" id="source-status-label">Connecting to Engine...</span>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <div class="sort-controls">
+        <span class="sort-label">SORT BY:</span>
+        <div class="sort-buttons" role="group" aria-label="Sort Options">
+          <button type="button" class="sort-btn active" data-sort="spf" title="Sort by Silver per Focus">
+            SPF <span class="sort-arrow" id="sort-spf-arrow">▼</span>
+          </button>
+          <button type="button" class="sort-btn" data-sort="profit" title="Sort by Net Unit Profit">
+            Profit <span class="sort-arrow" id="sort-profit-arrow"></span>
+          </button>
+          <button type="button" class="sort-btn" data-sort="volume" title="Sort by 24h Traded Volume">
+            Volume <span class="sort-arrow" id="sort-volume-arrow"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrollable Matrix Table -->
+  <div class="table-scroll-wrapper">
+    <table class="refining-table" id="refining-matrix-table" aria-label="Refining Matrix Table">
+      <thead>
+        <tr>
+          <th scope="col" class="th-tier">TIER / ENC</th>
+          <th scope="col" class="th-item">ITEM NAME</th>
+          <th scope="col" class="th-city">BONUS CITY</th>
+          <th scope="col" class="th-volume sortable-th" data-sort-key="volume">
+            <span class="th-content">24H VOLUME <span class="col-sort-icon" id="col-sort-volume"></span></span>
+          </th>
+          <th scope="col" class="th-freshness">DATA AGE</th>
+          <th scope="col" class="th-cost sortable-th" data-sort-key="cost">
+            <span class="th-content">CRAFT COST <span class="col-sort-icon" id="col-sort-cost"></span></span>
+          </th>
+          <th scope="col" class="th-profit sortable-th" data-sort-key="profit">
+            <span class="th-content">NET PROFIT <span class="col-sort-icon" id="col-sort-profit"></span></span>
+          </th>
+          <th scope="col" class="th-spf sortable-th active-sort" data-sort-key="spf">
+            <span class="th-content">SILVER / FOCUS <span class="col-sort-icon" id="col-sort-spf">▼</span></span>
+          </th>
+          <th scope="col" class="th-daily sortable-th" data-sort-key="daily">
+            <span class="th-content">DAILY YIELD (10k) <span class="col-sort-icon" id="col-sort-daily"></span></span>
+          </th>
+          <th scope="col" class="th-action">ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="refining-table-body">
+        <!-- Rows populated dynamically by client-side script -->
+        <tr class="loading-row">
+          <td colspan="10" class="loading-cell">
+            <div class="loading-spinner-wrap">
+              <span class="loading-spinner"></span>
+              <span>Loading refining calculations...</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty State Banner -->
+  <div class="empty-state" id="table-empty-state" style="display: none;">
+    <div class="empty-icon">⊘</div>
+    <div class="empty-title">No Refining Recipes Found</div>
+    <div class="empty-desc">No commodities match your current commodity/tier filters in this region. Try selecting "ALL" or switching region.</div>
+  </div>
+
+  <!-- Table Footer Legend -->
+  <div class="table-legend">
+    <div class="legend-item">
+      <span class="legend-dot green"></span>
+      <span>Fresh (&lt;15m)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot amber"></span>
+      <span>Aging (15-60m)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot red"></span>
+      <span>Stale (&gt;60m STALE)</span>
+    </div>
+    <div class="legend-divider"></div>
+    <div class="legend-item">
+      <span class="legend-spf-sample tabular-figures">54.2 SPF</span>
+      <span>= Silver Saved / Focus Point</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-note">All returns include biome city Resource Return Rate (RRR)</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .refining-table-container {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Toolbar */
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: var(--surface-primary);
+    border-bottom: 1px solid var(--border-hairline);
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .table-headline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .toolbar-title {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+  }
+
+  .count-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-hairline);
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+  }
+
+  .source-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-secondary);
+  }
+
+  .source-status .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+  }
+
+  .source-status.live {
+    border-color: rgba(78, 229, 182, 0.3);
+    color: var(--accent-mint);
+  }
+  .source-status.live .status-dot {
+    background-color: var(--accent-mint);
+    box-shadow: 0 0 6px var(--accent-mint);
+  }
+
+  .source-status.offline {
+    border-color: rgba(245, 166, 35, 0.3);
+    color: var(--accent-amber);
+  }
+  .source-status.offline .status-dot {
+    background-color: var(--accent-amber);
+  }
+
+  /* Sort Controls in Toolbar */
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .sort-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .sort-buttons {
+    display: inline-flex;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-hairline);
+    border-radius: 3px;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .sort-btn {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    color: var(--text-secondary);
+    background: transparent;
+    transition: all 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .sort-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--surface-elevated);
+  }
+
+  .sort-btn.active {
+    color: #000;
+    background-color: var(--accent-primary);
+  }
+
+  .sort-arrow {
+    font-size: 0.65rem;
+  }
+
+  /* Scroll Wrapper */
+  .table-scroll-wrapper {
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Table */
+  .refining-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .refining-table thead {
+    background-color: var(--surface-primary);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .refining-table th {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--border-hairline);
+    user-select: none;
+  }
+
+  .refining-table th.sortable-th {
+    cursor: pointer;
+    transition: color 0.12s ease, background-color 0.12s ease;
+  }
+
+  .refining-table th.sortable-th:hover {
+    color: var(--text-primary);
+    background-color: rgba(199, 245, 59, 0.04);
+  }
+
+  .refining-table th.active-sort {
+    color: var(--accent-primary);
+  }
+
+  .th-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .col-sort-icon {
+    font-size: 0.65rem;
+    width: 0.8rem;
+    display: inline-block;
+  }
+
+  .refining-table th.th-volume,
+  .refining-table th.th-cost,
+  .refining-table th.th-profit,
+  .refining-table th.th-spf,
+  .refining-table th.th-daily {
+    text-align: right;
+  }
+
+  .refining-table th.th-action {
+    text-align: center;
+  }
+
+  /* Table Body */
+  .refining-table tbody tr {
+    border-bottom: 1px solid var(--border-hairline);
+    transition: background-color 0.1s ease;
+  }
+
+  .refining-table tbody tr:hover {
+    background-color: rgba(199, 245, 59, 0.035);
+  }
+
+  .refining-table td {
+    padding: 0.6rem 0.75rem;
+    vertical-align: middle;
+  }
+
+  /* Specific Columns Styling */
+  .tier-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-primary);
+  }
+
+  .tier-t4 { border-color: #5A6270; color: #D1D5DB; }
+  .tier-t5 { border-color: rgba(56, 189, 248, 0.4); color: #38BDF8; }
+  .tier-t6 { border-color: rgba(245, 158, 11, 0.4); color: #F59E0B; }
+  .tier-t7 { border-color: rgba(239, 68, 68, 0.4); color: #EF4444; }
+  .tier-t8 { border-color: rgba(168, 85, 247, 0.5); color: #C084FC; }
+
+  .item-cell {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .item-name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .item-sub {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .city-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .city-name {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .rrr-tag {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+  }
+
+  .num-cell-right {
+    text-align: right;
+  }
+
+  /* 24h Volume & Liquidity */
+  .volume-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+  }
+
+  .volume-num {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .liquidity-badge {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.08rem 0.35rem;
+    border-radius: 2px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .liquidity-badge.high {
+    background-color: rgba(78, 229, 182, 0.12);
+    border: 1px solid rgba(78, 229, 182, 0.3);
+    color: var(--accent-mint);
+  }
+
+  .liquidity-badge.med {
+    background-color: rgba(245, 166, 35, 0.12);
+    border: 1px solid rgba(245, 166, 35, 0.3);
+    color: var(--accent-amber);
+  }
+
+  .liquidity-badge.illiquid,
+  .liquidity-badge.low {
+    background-color: rgba(255, 77, 77, 0.12);
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    color: var(--accent-danger);
+  }
+
+  /* Freshness Badge */
+  .freshness-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+  }
+
+  .freshness-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .freshness-badge.fresh {
+    background-color: rgba(78, 229, 182, 0.08);
+    border-color: rgba(78, 229, 182, 0.25);
+    color: var(--accent-mint);
+  }
+  .freshness-badge.fresh .dot {
+    background-color: var(--accent-mint);
+  }
+
+  .freshness-badge.aging {
+    background-color: rgba(245, 166, 35, 0.08);
+    border-color: rgba(245, 166, 35, 0.25);
+    color: var(--accent-amber);
+  }
+  .freshness-badge.aging .dot {
+    background-color: var(--accent-amber);
+  }
+
+  .freshness-badge.stale {
+    background-color: rgba(255, 77, 77, 0.1);
+    border-color: rgba(255, 77, 77, 0.3);
+    color: var(--accent-danger);
+  }
+  .freshness-badge.stale .dot {
+    background-color: var(--accent-danger);
+  }
+
+  /* Craft Cost */
+  .cost-num {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .silver-unit {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: 0.2rem;
+  }
+
+  /* Net Profit & Margin */
+  .profit-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+  }
+
+  .profit-num {
+    font-weight: 700;
+  }
+  .profit-num.positive {
+    color: var(--accent-mint);
+  }
+  .profit-num.negative {
+    color: var(--accent-danger);
+  }
+
+  .margin-badge {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .margin-badge.positive {
+    color: var(--accent-mint);
+  }
+  .margin-badge.negative {
+    color: var(--accent-danger);
+  }
+
+  /* SPF (Silver per Focus) Highlight */
+  .spf-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .spf-value {
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 0.92rem;
+    color: var(--accent-primary); /* Electric Lime */
+    letter-spacing: -0.01em;
+  }
+
+  .spf-unit {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+  }
+
+  /* Daily Yield */
+  .yield-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .yield-num {
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  /* Action Button */
+  .action-cell {
+    text-align: center;
+  }
+
+  .btn-math-audit {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.28rem 0.65rem;
+    border-radius: 3px;
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+  }
+
+  .btn-math-audit:hover {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    background-color: rgba(199, 245, 59, 0.08);
+  }
+
+  /* Loading State */
+  .loading-cell {
+    padding: 3rem 1rem !important;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .loading-spinner-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .loading-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border-hairline);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Empty State */
+  .empty-state {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    background-color: var(--surface-primary);
+  }
+
+  .empty-icon {
+    font-size: 2rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-title {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+  }
+
+  .empty-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* Table Legend */
+  .table-legend {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 0.65rem 1rem;
+    background-color: var(--surface-primary);
+    border-top: 1px solid var(--border-hairline);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .legend-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .legend-dot.green { background-color: var(--accent-mint); }
+  .legend-dot.amber { background-color: var(--accent-amber); }
+  .legend-dot.red { background-color: var(--accent-danger); }
+
+  .legend-divider {
+    width: 1px;
+    height: 12px;
+    background-color: var(--border-hairline);
+  }
+
+  .legend-spf-sample {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--accent-primary);
+  }
+
+  .legend-note {
+    font-style: italic;
+    color: var(--text-muted);
+  }
+</style>
+
+<script>
+  // TypeScript definition matching backend RefiningMatrixItem
+  interface RefiningMatrixItem {
+    item_id: string;
+    commodity: string;
+    tier: number;
+    enchantment: number;
+    city: string;
+    is_bonus_city: boolean;
+    item_value: number;
+    raw_item_id: string;
+    raw_amount: number;
+    raw_price: number;
+    prev_refined_item_id: string;
+    prev_refined_amount: number;
+    prev_refined_price: number;
+    sell_price: number;
+    station_fee: number;
+    effective_raw_cost: number;
+    effective_prev_cost: number;
+    total_craft_cost: number;
+    gross_revenue: number;
+    sales_tax: number;
+    setup_fee: number;
+    net_revenue: number;
+    profit_without_focus: number;
+    profit_with_focus: number;
+    focus_profit_delta: number;
+    base_focus_cost: number;
+    actual_focus_cost: number;
+    silver_per_focus: number;
+    daily_focus_silver: number;
+    profit_margin_pct: number;
+    rrr: number;
+    is_chained: boolean;
+    traded_volume_24h: number;
+    is_illiquid: boolean;
+    price_age_seconds: number;
+    freshness: string;
+    is_stale: boolean;
+  }
+
+  // Realistic fallback mock dataset used when Go backend is not currently running
+  const FALLBACK_REFINING_DATA: RefiningMatrixItem[] = [
+    {
+      item_id: "T6_PLANKS_LEVEL1@1",
+      commodity: "Wood",
+      tier: 6,
+      enchantment: 1,
+      city: "Fort Sterling",
+      is_bonus_city: true,
+      item_value: 128,
+      raw_item_id: "T6_WOOD_LEVEL1@1",
+      raw_amount: 4,
+      raw_price: 420,
+      prev_refined_item_id: "T5_PLANKS_LEVEL1@1",
+      prev_refined_amount: 1,
+      prev_refined_price: 760,
+      sell_price: 2450,
+      station_fee: 86.4,
+      effective_raw_cost: 1063.44,
+      effective_prev_cost: 481.08,
+      total_craft_cost: 1630.92,
+      gross_revenue: 2450,
+      sales_tax: 98,
+      setup_fee: 61.25,
+      net_revenue: 2290.75,
+      profit_without_focus: 659.83,
+      profit_with_focus: 1147.2,
+      focus_profit_delta: 487.37,
+      base_focus_cost: 450,
+      actual_focus_cost: 450,
+      silver_per_focus: 54.2,
+      daily_focus_silver: 542000,
+      profit_margin_pct: 40.5,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 12450,
+      is_illiquid: false,
+      price_age_seconds: 480, // 8m ago
+      freshness: "fresh",
+      is_stale: false
+    },
+    {
+      item_id: "T7_LEATHER_LEVEL1@1",
+      commodity: "Hide",
+      tier: 7,
+      enchantment: 1,
+      city: "Martlock",
+      is_bonus_city: true,
+      item_value: 256,
+      raw_item_id: "T7_HIDE_LEVEL1@1",
+      raw_amount: 5,
+      raw_price: 890,
+      prev_refined_item_id: "T6_LEATHER_LEVEL1@1",
+      prev_refined_amount: 1,
+      prev_refined_price: 2100,
+      sell_price: 6850,
+      station_fee: 172.8,
+      effective_raw_cost: 2816.85,
+      effective_prev_cost: 1329.3,
+      total_craft_cost: 4318.95,
+      gross_revenue: 6850,
+      sales_tax: 274,
+      setup_fee: 171.25,
+      net_revenue: 6404.75,
+      profit_without_focus: 2085.8,
+      profit_with_focus: 2657.8,
+      focus_profit_delta: 572.0,
+      base_focus_cost: 800,
+      actual_focus_cost: 800,
+      silver_per_focus: 71.5,
+      daily_focus_silver: 715000,
+      profit_margin_pct: 48.3,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 5400,
+      is_illiquid: false,
+      price_age_seconds: 1800, // 30m ago
+      freshness: "aging",
+      is_stale: false
+    },
+    {
+      item_id: "T5_METALBAR_LEVEL2@2",
+      commodity: "Ore",
+      tier: 5,
+      enchantment: 2,
+      city: "Thetford",
+      is_bonus_city: true,
+      item_value: 128,
+      raw_item_id: "T5_ORE_LEVEL2@2",
+      raw_amount: 3,
+      raw_price: 620,
+      prev_refined_item_id: "T4_METALBAR_LEVEL2@2",
+      prev_refined_amount: 1,
+      prev_refined_price: 480,
+      sell_price: 2680,
+      station_fee: 86.4,
+      effective_raw_cost: 1177.38,
+      effective_prev_cost: 303.84,
+      total_craft_cost: 1567.62,
+      gross_revenue: 2680,
+      sales_tax: 107.2,
+      setup_fee: 67,
+      net_revenue: 2505.8,
+      profit_without_focus: 938.18,
+      profit_with_focus: 1198.5,
+      focus_profit_delta: 260.32,
+      base_focus_cost: 417,
+      actual_focus_cost: 417,
+      silver_per_focus: 62.4,
+      daily_focus_silver: 624000,
+      profit_margin_pct: 59.8,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 8920,
+      is_illiquid: false,
+      price_age_seconds: 720, // 12m ago
+      freshness: "fresh",
+      is_stale: false
+    },
+    {
+      item_id: "T8_PLANKS",
+      commodity: "Wood",
+      tier: 8,
+      enchantment: 0,
+      city: "Fort Sterling",
+      is_bonus_city: true,
+      item_value: 256,
+      raw_item_id: "T8_WOOD",
+      raw_amount: 5,
+      raw_price: 1850,
+      prev_refined_item_id: "T7_PLANKS",
+      prev_refined_amount: 1,
+      prev_refined_price: 3600,
+      sell_price: 12800,
+      station_fee: 172.8,
+      effective_raw_cost: 5855.25,
+      effective_prev_cost: 2278.8,
+      total_craft_cost: 8306.85,
+      gross_revenue: 12800,
+      sales_tax: 512,
+      setup_fee: 320,
+      net_revenue: 11968,
+      profit_without_focus: 3661.15,
+      profit_with_focus: 4912.5,
+      focus_profit_delta: 1251.35,
+      base_focus_cost: 1422,
+      actual_focus_cost: 1422,
+      silver_per_focus: 88.0,
+      daily_focus_silver: 880000,
+      profit_margin_pct: 44.1,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 3100,
+      is_illiquid: false,
+      price_age_seconds: 1200, // 20m ago
+      freshness: "aging",
+      is_stale: false
+    },
+    {
+      item_id: "T4_CLOTH",
+      commodity: "Fiber",
+      tier: 4,
+      enchantment: 0,
+      city: "Lymhurst",
+      is_bonus_city: true,
+      item_value: 16,
+      raw_item_id: "T4_FIBER",
+      raw_amount: 2,
+      raw_price: 85,
+      prev_refined_item_id: "T3_CLOTH",
+      prev_refined_amount: 1,
+      prev_refined_price: 45,
+      sell_price: 260,
+      station_fee: 10.8,
+      effective_raw_cost: 107.61,
+      effective_prev_cost: 28.48,
+      total_craft_cost: 146.89,
+      gross_revenue: 260,
+      sales_tax: 10.4,
+      setup_fee: 6.5,
+      net_revenue: 243.1,
+      profit_without_focus: 96.21,
+      profit_with_focus: 130.4,
+      focus_profit_delta: 34.19,
+      base_focus_cost: 142,
+      actual_focus_cost: 142,
+      silver_per_focus: 24.1,
+      daily_focus_silver: 241000,
+      profit_margin_pct: 65.5,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 32000,
+      is_illiquid: false,
+      price_age_seconds: 240, // 4m ago
+      freshness: "fresh",
+      is_stale: false
+    },
+    {
+      item_id: "T4_PLANKS",
+      commodity: "Wood",
+      tier: 4,
+      enchantment: 0,
+      city: "Fort Sterling",
+      is_bonus_city: true,
+      item_value: 16,
+      raw_item_id: "T4_WOOD",
+      raw_amount: 2,
+      raw_price: 92,
+      prev_refined_item_id: "T3_PLANKS",
+      prev_refined_amount: 1,
+      prev_refined_price: 48,
+      sell_price: 275,
+      station_fee: 10.8,
+      effective_raw_cost: 116.48,
+      effective_prev_cost: 30.38,
+      total_craft_cost: 157.66,
+      gross_revenue: 275,
+      sales_tax: 11.0,
+      setup_fee: 6.88,
+      net_revenue: 257.12,
+      profit_without_focus: 99.46,
+      profit_with_focus: 129.7,
+      focus_profit_delta: 30.24,
+      base_focus_cost: 142,
+      actual_focus_cost: 142,
+      silver_per_focus: 21.3,
+      daily_focus_silver: 213000,
+      profit_margin_pct: 63.1,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 45000,
+      is_illiquid: false,
+      price_age_seconds: 300, // 5m ago
+      freshness: "fresh",
+      is_stale: false
+    },
+    {
+      item_id: "T5_PLANKS",
+      commodity: "Wood",
+      tier: 5,
+      enchantment: 0,
+      city: "Fort Sterling",
+      is_bonus_city: true,
+      item_value: 32,
+      raw_item_id: "T5_WOOD",
+      raw_amount: 3,
+      raw_price: 210,
+      prev_refined_item_id: "T4_PLANKS",
+      prev_refined_amount: 1,
+      prev_refined_price: 275,
+      sell_price: 880,
+      station_fee: 21.6,
+      effective_raw_cost: 398.79,
+      effective_prev_cost: 174.07,
+      total_craft_cost: 594.46,
+      gross_revenue: 880,
+      sales_tax: 35.2,
+      setup_fee: 22.0,
+      net_revenue: 822.8,
+      profit_without_focus: 228.34,
+      profit_with_focus: 320.8,
+      focus_profit_delta: 92.46,
+      base_focus_cost: 253,
+      actual_focus_cost: 253,
+      silver_per_focus: 36.5,
+      daily_focus_silver: 365000,
+      profit_margin_pct: 38.4,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 19500,
+      is_illiquid: false,
+      price_age_seconds: 600, // 10m ago
+      freshness: "fresh",
+      is_stale: false
+    },
+    {
+      item_id: "T6_METALBAR",
+      commodity: "Ore",
+      tier: 6,
+      enchantment: 0,
+      city: "Thetford",
+      is_bonus_city: true,
+      item_value: 64,
+      raw_item_id: "T6_ORE",
+      raw_amount: 4,
+      raw_price: 490,
+      prev_refined_item_id: "T5_METALBAR",
+      prev_refined_amount: 1,
+      prev_refined_price: 920,
+      sell_price: 2950,
+      station_fee: 43.2,
+      effective_raw_cost: 1240.68,
+      effective_prev_cost: 582.36,
+      total_craft_cost: 1866.24,
+      gross_revenue: 2950,
+      sales_tax: 118,
+      setup_fee: 73.75,
+      net_revenue: 2758.25,
+      profit_without_focus: 892.01,
+      profit_with_focus: 1100.0,
+      focus_profit_delta: 207.99,
+      base_focus_cost: 450,
+      actual_focus_cost: 450,
+      silver_per_focus: 46.2,
+      daily_focus_silver: 462000,
+      profit_margin_pct: 47.8,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 11200,
+      is_illiquid: false,
+      price_age_seconds: 1100, // 18m ago
+      freshness: "aging",
+      is_stale: false
+    },
+    {
+      item_id: "T6_LEATHER_LEVEL1@1",
+      commodity: "Hide",
+      tier: 6,
+      enchantment: 1,
+      city: "Martlock",
+      is_bonus_city: true,
+      item_value: 128,
+      raw_item_id: "T6_HIDE_LEVEL1@1",
+      raw_amount: 4,
+      raw_price: 440,
+      prev_refined_item_id: "T5_LEATHER_LEVEL1@1",
+      prev_refined_amount: 1,
+      prev_refined_price: 880,
+      sell_price: 2850,
+      station_fee: 86.4,
+      effective_raw_cost: 1114.08,
+      effective_prev_cost: 557.04,
+      total_craft_cost: 1757.52,
+      gross_revenue: 2850,
+      sales_tax: 114,
+      setup_fee: 71.25,
+      net_revenue: 2664.75,
+      profit_without_focus: 907.23,
+      profit_with_focus: 1172.3,
+      focus_profit_delta: 265.07,
+      base_focus_cost: 450,
+      actual_focus_cost: 450,
+      silver_per_focus: 58.9,
+      daily_focus_silver: 589000,
+      profit_margin_pct: 51.6,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 6700,
+      is_illiquid: false,
+      price_age_seconds: 650, // 10m ago
+      freshness: "fresh",
+      is_stale: false
+    },
+    {
+      item_id: "T6_CLOTH_LEVEL2@2",
+      commodity: "Fiber",
+      tier: 6,
+      enchantment: 2,
+      city: "Lymhurst",
+      is_bonus_city: true,
+      item_value: 256,
+      raw_item_id: "T6_FIBER_LEVEL2@2",
+      raw_amount: 4,
+      raw_price: 1150,
+      prev_refined_item_id: "T5_CLOTH_LEVEL2@2",
+      prev_refined_amount: 1,
+      prev_refined_price: 2200,
+      sell_price: 8100,
+      station_fee: 172.8,
+      effective_raw_cost: 2911.8,
+      effective_prev_cost: 1392.6,
+      total_craft_cost: 4477.2,
+      gross_revenue: 8100,
+      sales_tax: 324,
+      setup_fee: 202.5,
+      net_revenue: 7573.5,
+      profit_without_focus: 3096.3,
+      profit_with_focus: 3385.7,
+      focus_profit_delta: 289.4,
+      base_focus_cost: 450,
+      actual_focus_cost: 450,
+      silver_per_focus: 64.3,
+      daily_focus_silver: 643000,
+      profit_margin_pct: 69.2,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 4800,
+      is_illiquid: false,
+      price_age_seconds: 1400, // 23m ago
+      freshness: "aging",
+      is_stale: false
+    },
+    {
+      item_id: "T7_PLANKS",
+      commodity: "Wood",
+      tier: 7,
+      enchantment: 0,
+      city: "Fort Sterling",
+      is_bonus_city: true,
+      item_value: 128,
+      raw_item_id: "T7_WOOD",
+      raw_amount: 5,
+      raw_price: 840,
+      prev_refined_item_id: "T6_PLANKS",
+      prev_refined_amount: 1,
+      prev_refined_price: 1950,
+      sell_price: 6400,
+      station_fee: 86.4,
+      effective_raw_cost: 2658.6,
+      effective_prev_cost: 1234.35,
+      total_craft_cost: 3979.35,
+      gross_revenue: 6400,
+      sales_tax: 256,
+      setup_fee: 160,
+      net_revenue: 5984,
+      profit_without_focus: 2004.65,
+      profit_with_focus: 2483.0,
+      focus_profit_delta: 478.35,
+      base_focus_cost: 800,
+      actual_focus_cost: 800,
+      silver_per_focus: 59.8,
+      daily_focus_silver: 598000,
+      profit_margin_pct: 50.4,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 4100,
+      is_illiquid: false,
+      price_age_seconds: 1600, // 26m ago
+      freshness: "aging",
+      is_stale: false
+    },
+    {
+      item_id: "T7_METALBAR_LEVEL2@2",
+      commodity: "Ore",
+      tier: 7,
+      enchantment: 2,
+      city: "Thetford",
+      is_bonus_city: true,
+      item_value: 512,
+      raw_item_id: "T7_ORE_LEVEL2@2",
+      raw_amount: 5,
+      raw_price: 2400,
+      prev_refined_item_id: "T6_METALBAR_LEVEL2@2",
+      prev_refined_amount: 1,
+      prev_refined_price: 5400,
+      sell_price: 19500,
+      station_fee: 345.6,
+      effective_raw_cost: 7596.0,
+      effective_prev_cost: 3418.2,
+      total_craft_cost: 11359.8,
+      gross_revenue: 19500,
+      sales_tax: 780,
+      setup_fee: 487.5,
+      net_revenue: 18232.5,
+      profit_without_focus: 6872.7,
+      profit_with_focus: 7525.5,
+      focus_profit_delta: 652.8,
+      base_focus_cost: 800,
+      actual_focus_cost: 800,
+      silver_per_focus: 81.6,
+      daily_focus_silver: 816000,
+      profit_margin_pct: 60.5,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 2900,
+      is_illiquid: false,
+      price_age_seconds: 1900, // 31m ago
+      freshness: "aging",
+      is_stale: false
+    },
+    {
+      item_id: "T8_PLANKS_LEVEL1@1",
+      commodity: "Wood",
+      tier: 8,
+      enchantment: 1,
+      city: "Fort Sterling",
+      is_bonus_city: true,
+      item_value: 512,
+      raw_item_id: "T8_WOOD_LEVEL1@1",
+      raw_amount: 5,
+      raw_price: 3800,
+      prev_refined_item_id: "T7_PLANKS_LEVEL1@1",
+      prev_refined_amount: 1,
+      prev_refined_price: 8200,
+      sell_price: 32000,
+      station_fee: 345.6,
+      effective_raw_cost: 12027.0,
+      effective_prev_cost: 5190.6,
+      total_craft_cost: 17563.2,
+      gross_revenue: 32000,
+      sales_tax: 1280,
+      setup_fee: 800,
+      net_revenue: 29920,
+      profit_without_focus: 12356.8,
+      profit_with_focus: 13672.0,
+      focus_profit_delta: 1315.2,
+      base_focus_cost: 1422,
+      actual_focus_cost: 1422,
+      silver_per_focus: 92.5,
+      daily_focus_silver: 925000,
+      profit_margin_pct: 70.4,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 1450,
+      is_illiquid: false,
+      price_age_seconds: 1500, // 25m ago
+      freshness: "aging",
+      is_stale: false
+    },
+    {
+      item_id: "T8_METALBAR_LEVEL1@1",
+      commodity: "Ore",
+      tier: 8,
+      enchantment: 1,
+      city: "Thetford",
+      is_bonus_city: true,
+      item_value: 512,
+      raw_item_id: "T8_ORE_LEVEL1@1",
+      raw_amount: 5,
+      raw_price: 4100,
+      prev_refined_item_id: "T7_METALBAR_LEVEL1@1",
+      prev_refined_amount: 1,
+      prev_refined_price: 8900,
+      sell_price: 34500,
+      station_fee: 345.6,
+      effective_raw_cost: 12976.5,
+      effective_prev_cost: 5633.7,
+      total_craft_cost: 18955.8,
+      gross_revenue: 34500,
+      sales_tax: 1380,
+      setup_fee: 862.5,
+      net_revenue: 32257.5,
+      profit_without_focus: 13301.7,
+      profit_with_focus: 14678.0,
+      focus_profit_delta: 1376.3,
+      base_focus_cost: 1422,
+      actual_focus_cost: 1422,
+      silver_per_focus: 96.8,
+      daily_focus_silver: 968000,
+      profit_margin_pct: 70.2,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 850,
+      is_illiquid: true,
+      price_age_seconds: 4200, // 70m ago
+      freshness: "stale",
+      is_stale: true
+    },
+    {
+      item_id: "T4_STONEBLOCK",
+      commodity: "Stone",
+      tier: 4,
+      enchantment: 0,
+      city: "Bridgewatch",
+      is_bonus_city: true,
+      item_value: 16,
+      raw_item_id: "T4_ROCK",
+      raw_amount: 2,
+      raw_price: 75,
+      prev_refined_item_id: "T3_STONEBLOCK",
+      prev_refined_amount: 1,
+      prev_refined_price: 42,
+      sell_price: 240,
+      station_fee: 10.8,
+      effective_raw_cost: 94.95,
+      effective_prev_cost: 26.59,
+      total_craft_cost: 132.34,
+      gross_revenue: 240,
+      sales_tax: 9.6,
+      setup_fee: 6.0,
+      net_revenue: 224.4,
+      profit_without_focus: 92.06,
+      profit_with_focus: 118.4,
+      focus_profit_delta: 26.34,
+      base_focus_cost: 142,
+      actual_focus_cost: 142,
+      silver_per_focus: 18.5,
+      daily_focus_silver: 185000,
+      profit_margin_pct: 69.6,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 26000,
+      is_illiquid: false,
+      price_age_seconds: 500, // 8m ago
+      freshness: "fresh",
+      is_stale: false
+    },
+    {
+      item_id: "T5_STONEBLOCK",
+      commodity: "Stone",
+      tier: 5,
+      enchantment: 0,
+      city: "Bridgewatch",
+      is_bonus_city: true,
+      item_value: 32,
+      raw_item_id: "T5_ROCK",
+      raw_amount: 3,
+      raw_price: 190,
+      prev_refined_item_id: "T4_STONEBLOCK",
+      prev_refined_amount: 1,
+      prev_refined_price: 240,
+      sell_price: 780,
+      station_fee: 21.6,
+      effective_raw_cost: 360.81,
+      effective_prev_cost: 151.92,
+      total_craft_cost: 534.33,
+      gross_revenue: 780,
+      sales_tax: 31.2,
+      setup_fee: 19.5,
+      net_revenue: 729.3,
+      profit_without_focus: 194.97,
+      profit_with_focus: 265.8,
+      focus_profit_delta: 70.83,
+      base_focus_cost: 253,
+      actual_focus_cost: 253,
+      silver_per_focus: 28.0,
+      daily_focus_silver: 280000,
+      profit_margin_pct: 36.5,
+      rrr: 0.367,
+      is_chained: false,
+      traded_volume_24h: 15200,
+      is_illiquid: false,
+      price_age_seconds: 4500, // 75m ago (STALE)
+      freshness: "stale",
+      is_stale: true
+    }
+  ];
+
+  // Item name map based on Albion Online official names
+  const COMMODITY_NAMES: Record<string, Record<number, string>> = {
+    wood: {
+      4: "Pine Planks",
+      5: "Cedar Planks",
+      6: "Bloodoak Planks",
+      7: "Ashenbark Planks",
+      8: "Whitewood Planks"
+    },
+    ore: {
+      4: "Bronze Bar",
+      5: "Steel Bar",
+      6: "Titanium Bar",
+      7: "Runite Bar",
+      8: "Meteorite Bar"
+    },
+    hide: {
+      4: "Medium Leather",
+      5: "Heavy Leather",
+      6: "Robust Leather",
+      7: "Thick Leather",
+      8: "Reinforced Leather"
+    },
+    fiber: {
+      4: "Fine Cloth",
+      5: "Ornate Cloth",
+      6: "Lavish Cloth",
+      7: "Opulent Cloth",
+      8: "Barbed Cloth"
+    },
+    stone: {
+      4: "Travertine Block",
+      5: "Granite Block",
+      6: "Slate Block",
+      7: "Basalt Block",
+      8: "Marble Block"
+    }
+  };
+
+  function getItemDisplayName(commodity: string, tier: number, enchantment: number): string {
+    const commKey = commodity.toLowerCase();
+    const baseName = COMMODITY_NAMES[commKey]?.[tier] || `${commodity} T${tier}`;
+    if (enchantment > 0) {
+      return `${baseName} (.${enchantment})`;
+    }
+    return baseName;
+  }
+
+  // Indonesian / Albion localized currency formatter
+  function formatSilver(val: number): string {
+    return Math.round(val).toLocaleString('id-ID');
+  }
+
+  function formatVolume(val: number): string {
+    return val.toLocaleString('id-ID');
+  }
+
+  function formatAge(seconds: number): { text: string; cssClass: string } {
+    if (seconds < 60) {
+      return { text: "Just now", cssClass: "fresh" };
+    }
+    const mins = Math.floor(seconds / 60);
+    if (mins < 15) {
+      return { text: `${mins}m ago`, cssClass: "fresh" };
+    }
+    if (mins <= 60) {
+      return { text: `${mins}m ago`, cssClass: "aging" };
+    }
+    return { text: `>60m STALE`, cssClass: "stale" };
+  }
+
+  function getLiquidityBadge(vol: number, isIlliquid: boolean): { text: string; cssClass: string } {
+    if (isIlliquid || vol < 1000) {
+      return { text: "Illiquid", cssClass: "illiquid" };
+    }
+    if (vol >= 10000) {
+      return { text: "High", cssClass: "high" };
+    }
+    return { text: "Med", cssClass: "med" };
+  }
+
+  // State
+  interface AppState {
+    region: string;
+    commodity: string;
+    tier: string;
+    stationTax: number;
+    taxChannel: string;
+    premium: boolean;
+    chained: boolean;
+    sortKey: 'spf' | 'profit' | 'volume' | 'cost' | 'daily';
+    sortOrder: 'asc' | 'desc';
+  }
+
+  let state: AppState = {
+    region: localStorage.getItem('albionflow_region') || 'asia',
+    commodity: localStorage.getItem('albionflow_commodity') || 'ALL',
+    tier: localStorage.getItem('albionflow_tier') || 'ALL',
+    stationTax: parseInt(localStorage.getItem('albionflow_station_tax') || '600', 10),
+    taxChannel: localStorage.getItem('albionflow_tax_channel') || 'sell_order',
+    premium: localStorage.getItem('albionflow_premium') !== 'false',
+    chained: localStorage.getItem('albionflow_chained') !== 'false',
+    sortKey: 'spf',
+    sortOrder: 'desc'
+  };
+
+  let rawData: RefiningMatrixItem[] = [];
+
+  // DOM elements cache
+  let tableBody: HTMLTableSectionElement | null = null;
+  let emptyState: HTMLElement | null = null;
+  let itemsCountBadge: HTMLElement | null = null;
+  let sourceStatusBadge: HTMLElement | null = null;
+  let sourceStatusLabel: HTMLElement | null = null;
+
+  async function fetchMatrixData() {
+    const channelParam = state.taxChannel === 'direct_trade' ? 'direct' : state.taxChannel;
+    const url = new URL('http://localhost:8081/api/v1/refining/matrix');
+    url.searchParams.set('region', state.region);
+    url.searchParams.set('tax', state.stationTax.toString());
+    url.searchParams.set('channel', channelParam);
+    url.searchParams.set('premium', state.premium ? 'true' : 'false');
+    url.searchParams.set('chained', state.chained ? 'true' : 'false');
+
+    if (state.commodity && state.commodity !== 'ALL') {
+      url.searchParams.set('commodity', state.commodity.toLowerCase());
+    }
+    if (state.tier && state.tier !== 'ALL') {
+      const tNum = parseInt(state.tier.replace('T', ''), 10);
+      if (!isNaN(tNum)) {
+        url.searchParams.set('tier', tNum.toString());
+      }
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(url.toString(), { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const data: RefiningMatrixItem[] = await res.json();
+      rawData = data;
+      updateStatusBadge(true, `Live API (${state.region.toUpperCase()})`);
+    } catch (err) {
+      // Backend offline or unreachable: fall back to rich client-side sample data
+      rawData = recalculateFallbackData(FALLBACK_REFINING_DATA, state);
+      updateStatusBadge(false, `Offline Snapshot (${state.region.toUpperCase()})`);
+    }
+
+    renderTable();
+  }
+
+  // Recalculates mathematical numbers for fallback sample data based on user station fee & tax
+  function recalculateFallbackData(items: RefiningMatrixItem[], s: AppState): RefiningMatrixItem[] {
+    let salesTaxRate = 0.04;
+    let setupFeeRate = 0.025;
+
+    const channel = s.taxChannel === 'direct_trade' ? 'direct' : s.taxChannel;
+    if (channel === 'direct') {
+      salesTaxRate = 0;
+      setupFeeRate = 0;
+    } else if (channel === 'instant_buy') {
+      salesTaxRate = s.premium ? 0.04 : 0.08;
+      setupFeeRate = 0;
+    } else {
+      // sell_order
+      salesTaxRate = s.premium ? 0.04 : 0.08;
+      setupFeeRate = 0.025;
+    }
+
+    return items.map((item) => {
+      const rrr = 0.367;
+      const nutrition = item.item_value * 0.1125;
+      const stationFee = (nutrition * s.stationTax) / 100;
+      const effectiveRaw = item.raw_amount * item.raw_price * (1 - rrr);
+      const effectivePrev = item.prev_refined_amount * item.prev_refined_price * (1 - rrr);
+      const totalCraftCost = effectiveRaw + effectivePrev + stationFee;
+
+      const grossRev = item.sell_price;
+      const salesTax = grossRev * salesTaxRate;
+      const setupFee = grossRev * setupFeeRate;
+      const netRev = grossRev - salesTax - setupFee;
+      const profitNoFocus = netRev - totalCraftCost;
+      const marginPct = totalCraftCost > 0 ? (profitNoFocus / totalCraftCost) * 100 : 0;
+
+      // With focus calculation (53.9% RRR)
+      const rrrFocus = 0.539;
+      const effectiveRawFocus = item.raw_amount * item.raw_price * (1 - rrrFocus);
+      const effectivePrevFocus = item.prev_refined_amount * item.prev_refined_price * (1 - rrrFocus);
+      const totalCraftCostFocus = effectiveRawFocus + effectivePrevFocus + stationFee;
+      const profitWithFocus = netRev - totalCraftCostFocus;
+      const deltaProfit = profitWithFocus - profitNoFocus;
+      const spf = item.actual_focus_cost > 0 ? deltaProfit / item.actual_focus_cost : 0;
+      const dailyYield = spf * 10000;
+
+      return {
+        ...item,
+        station_fee: stationFee,
+        effective_raw_cost: effectiveRaw,
+        effective_prev_cost: effectivePrev,
+        total_craft_cost: totalCraftCost,
+        sales_tax: salesTax,
+        setup_fee: setupFee,
+        net_revenue: netRev,
+        profit_without_focus: profitNoFocus,
+        profit_with_focus: profitWithFocus,
+        focus_profit_delta: deltaProfit,
+        silver_per_focus: spf,
+        daily_focus_silver: dailyYield,
+        profit_margin_pct: marginPct
+      };
+    });
+  }
+
+  function updateStatusBadge(isLive: boolean, text: string) {
+    if (!sourceStatusBadge || !sourceStatusLabel) return;
+    if (isLive) {
+      sourceStatusBadge.className = 'source-status live';
+    } else {
+      sourceStatusBadge.className = 'source-status offline';
+    }
+    sourceStatusLabel.textContent = text;
+  }
+
+  function renderTable() {
+    if (!tableBody) return;
+
+    // Filter items according to state
+    let filtered = rawData.filter((item) => {
+      if (state.commodity && state.commodity !== 'ALL') {
+        if (item.commodity.toUpperCase() !== state.commodity.toUpperCase()) {
+          return false;
+        }
+      }
+      if (state.tier && state.tier !== 'ALL') {
+        const tNum = parseInt(state.tier.replace('T', ''), 10);
+        if (!isNaN(tNum) && item.tier !== tNum) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    // Sort items
+    filtered.sort((a, b) => {
+      let valA = 0;
+      let valB = 0;
+      switch (state.sortKey) {
+        case 'profit':
+          valA = a.profit_without_focus;
+          valB = b.profit_without_focus;
+          break;
+        case 'volume':
+          valA = a.traded_volume_24h;
+          valB = b.traded_volume_24h;
+          break;
+        case 'cost':
+          valA = a.total_craft_cost;
+          valB = b.total_craft_cost;
+          break;
+        case 'daily':
+          valA = a.daily_focus_silver;
+          valB = b.daily_focus_silver;
+          break;
+        case 'spf':
+        default:
+          valA = a.silver_per_focus;
+          valB = b.silver_per_focus;
+          break;
+      }
+
+      if (state.sortOrder === 'asc') {
+        return valA > valB ? 1 : valA < valB ? -1 : 0;
+      } else {
+        return valA < valB ? 1 : valA > valB ? -1 : 0;
+      }
+    });
+
+    // Update count badge
+    if (itemsCountBadge) {
+      itemsCountBadge.textContent = `${filtered.length} Items`;
+    }
+
+    // Toggle empty state
+    if (filtered.length === 0) {
+      tableBody.innerHTML = '';
+      if (emptyState) emptyState.style.display = 'block';
+      return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+
+    // Build rows HTML
+    const htmlRows = filtered.map((item) => {
+      const tierEnc = `T${item.tier}.${item.enchantment}`;
+      const itemName = getItemDisplayName(item.commodity, item.tier, item.enchantment);
+      const ageInfo = formatAge(item.price_age_seconds);
+      const liqInfo = getLiquidityBadge(item.traded_volume_24h, item.is_illiquid);
+
+      const isProfitPositive = item.profit_without_focus >= 0;
+      const profitClass = isProfitPositive ? 'positive' : 'negative';
+      const profitSign = isProfitPositive ? '+' : '';
+
+      return `
+        <tr data-item-id="${item.item_id}">
+          <td class="td-tier">
+            <span class="tier-badge tier-t${item.tier}">${tierEnc}</span>
+          </td>
+          <td class="td-item">
+            <div class="item-cell">
+              <span class="item-name">${itemName}</span>
+              <span class="item-sub">${item.commodity} // ${item.item_id}</span>
+            </div>
+          </td>
+          <td class="td-city">
+            <div class="city-cell">
+              <span class="city-name">${item.city}</span>
+              <span class="rrr-tag tabular-figures">${(item.rrr * 100).toFixed(1)}% RRR</span>
+            </div>
+          </td>
+          <td class="td-volume num-cell-right">
+            <div class="volume-wrapper">
+              <span class="volume-num tabular-figures">${formatVolume(item.traded_volume_24h)} unit</span>
+              <span class="liquidity-badge ${liqInfo.cssClass}">${liqInfo.text}</span>
+            </div>
+          </td>
+          <td class="td-freshness">
+            <span class="freshness-badge ${ageInfo.cssClass}">
+              <span class="dot"></span>
+              ${ageInfo.text}
+            </span>
+          </td>
+          <td class="td-cost num-cell-right">
+            <span class="cost-num tabular-figures">${formatSilver(item.total_craft_cost)}</span>
+            <span class="silver-unit">Silver</span>
+          </td>
+          <td class="td-profit num-cell-right">
+            <div class="profit-wrapper">
+              <span class="profit-num tabular-figures ${profitClass}">${profitSign}${formatSilver(item.profit_without_focus)} Silver</span>
+              <span class="margin-badge tabular-figures ${profitClass}">${profitSign}${item.profit_margin_pct.toFixed(1)}%</span>
+            </div>
+          </td>
+          <td class="td-spf num-cell-right">
+            <div class="spf-wrapper">
+              <span class="spf-value tabular-figures">${item.silver_per_focus.toFixed(1)}</span>
+              <span class="spf-unit">Silver/Focus</span>
+            </div>
+          </td>
+          <td class="td-daily num-cell-right">
+            <div class="yield-wrapper">
+              <span class="yield-num tabular-figures">${formatSilver(item.daily_focus_silver)}</span>
+              <span class="silver-unit">Silver</span>
+            </div>
+          </td>
+          <td class="td-action action-cell">
+            <button
+              type="button"
+              class="btn-math-audit"
+              data-item-id="${item.item_id}"
+              title="Show exact formula breakdown and market fee audit"
+            >
+              Rincian Kalkulasi
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tableBody.innerHTML = htmlRows;
+    updateSortIndicators();
+  }
+
+  function updateSortIndicators() {
+    // Update toolbar sort buttons
+    const sortBtns = document.querySelectorAll<HTMLButtonElement>('.sort-btn');
+    sortBtns.forEach((btn) => {
+      const key = btn.dataset.sort;
+      const arrowSpan = btn.querySelector('.sort-arrow');
+      if (key === state.sortKey) {
+        btn.classList.add('active');
+        if (arrowSpan) {
+          arrowSpan.textContent = state.sortOrder === 'asc' ? '▲' : '▼';
+        }
+      } else {
+        btn.classList.remove('active');
+        if (arrowSpan) {
+          arrowSpan.textContent = '';
+        }
+      }
+    });
+
+    // Update table header icons
+    const thElements = document.querySelectorAll<HTMLTableCellElement>('.sortable-th');
+    thElements.forEach((th) => {
+      const key = th.dataset.sortKey;
+      const iconSpan = th.querySelector('.col-sort-icon');
+      if (key === state.sortKey) {
+        th.classList.add('active-sort');
+        if (iconSpan) {
+          iconSpan.textContent = state.sortOrder === 'asc' ? '▲' : '▼';
+        }
+      } else {
+        th.classList.remove('active-sort');
+        if (iconSpan) {
+          iconSpan.textContent = '';
+        }
+      }
+    });
+  }
+
+  function setSort(key: AppState['sortKey']) {
+    if (state.sortKey === key) {
+      // Toggle order
+      state.sortOrder = state.sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.sortKey = key;
+      // Default to desc for spf, profit, volume, daily; asc for cost
+      state.sortOrder = key === 'cost' ? 'asc' : 'desc';
+    }
+    renderTable();
+  }
+
+  function initRefiningTable() {
+    tableBody = document.getElementById('refining-table-body') as HTMLTableSectionElement | null;
+    emptyState = document.getElementById('table-empty-state');
+    itemsCountBadge = document.getElementById('items-count-badge');
+    sourceStatusBadge = document.getElementById('source-status-badge');
+    sourceStatusLabel = document.getElementById('source-status-label');
+
+    // Bind toolbar sort buttons
+    const sortBtns = document.querySelectorAll<HTMLButtonElement>('.sort-btn');
+    sortBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.sort as AppState['sortKey'];
+        if (key) setSort(key);
+      });
+    });
+
+    // Bind column header click sorting
+    const thElements = document.querySelectorAll<HTMLTableCellElement>('.sortable-th');
+    thElements.forEach((th) => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sortKey as AppState['sortKey'];
+        if (key) setSort(key);
+      });
+    });
+
+    // Event Delegation for "Rincian Kalkulasi" buttons
+    if (tableBody) {
+      tableBody.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement | null;
+        if (!target) return;
+        const btn = target.closest('.btn-math-audit') as HTMLButtonElement | null;
+        if (btn) {
+          const itemId = btn.dataset.itemId;
+          const foundItem = rawData.find((item) => item.item_id === itemId);
+          if (foundItem) {
+            // Dispatch custom event for ShowTheMathModal
+            window.dispatchEvent(
+              new CustomEvent('open-math-modal', {
+                detail: foundItem
+              })
+            );
+          }
+        }
+      });
+    }
+
+    // Global listeners for ControlBar and Header events
+    const handleFilterUpdate = (detail: any) => {
+      if (!detail) return;
+      if (detail.commodity !== undefined) state.commodity = detail.commodity;
+      if (detail.tier !== undefined) state.tier = detail.tier;
+      if (detail.stationTax !== undefined) state.stationTax = detail.stationTax;
+      if (detail.taxChannel !== undefined) state.taxChannel = detail.taxChannel;
+      if (detail.premium !== undefined) state.premium = detail.premium;
+      if (detail.chained !== undefined) state.chained = detail.chained;
+      fetchMatrixData();
+    };
+
+    const handleRegionUpdate = (detail: any) => {
+      if (detail && detail.region) {
+        state.region = detail.region.toLowerCase();
+        fetchMatrixData();
+      }
+    };
+
+    window.addEventListener('albionflow:filter-changed', (e: any) => handleFilterUpdate(e.detail));
+    window.addEventListener('control-bar-change', (e: any) => handleFilterUpdate(e.detail));
+
+    window.addEventListener('albionflow:region-changed', (e: any) => handleRegionUpdate(e.detail));
+    window.addEventListener('region-change', (e: any) => handleRegionUpdate(e.detail));
+
+    window.addEventListener('albionflow:prices-refreshed', () => {
+      fetchMatrixData();
+    });
+
+    // Initial fetch
+    fetchMatrixData();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRefiningTable);
+  } else {
+    initRefiningTable();
+  }
+</script>
