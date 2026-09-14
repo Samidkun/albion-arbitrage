@@ -85,10 +85,10 @@ Files:
 - Create: `backend/pkg/engine/rrr.go`
 - Test: `backend/pkg/engine/rrr_test.go`
 
-- [ ] **Step 1: Implement Resource Return Rate (RRR) formula (15.2% base, 36.7% city bonus, 53.9% focus bonus)**
-- [ ] **Step 2: Implement Station Nutrition Fee calculation based on Item Value (IV)**
-- [ ] **Step 3: Write unit tests verifying nutrition cost and RRR refund precision**
-- [ ] **Step 4: Commit:** `feat(backend): rrr and station nutrition fee calculation engine`
+- [x] **Step 1: Implement Resource Return Rate (RRR) formula (15.2% base, 36.7% city bonus, 53.9% focus bonus)**
+- [x] **Step 2: Implement Station Nutrition Fee calculation based on Item Value (IV)**
+- [x] **Step 3: Write unit tests verifying nutrition cost and RRR refund precision**
+- [x] **Step 4: Commit:** `feat(backend): rrr and station nutrition fee calculation engine`
 
 ---
 
