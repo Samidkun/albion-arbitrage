@@ -224,11 +224,11 @@ Files:
 
 ### Task 4.1: Full Simulation Verification with Multi-City Real World Feed
 **Files:**
-- Create: `backend/tests/e2e/simulation_test.go`
+- Create: `backend/tests/e2e/arbitrage_workflow_test.go`
 
-- [ ] **Step 1: Test Scenario: Seed realistic multi-city market prices across T4-T8**
-- [ ] **Step 2: Verify zero-loss assertions: RRR refunds, tax deductions, and SPF rankings match exact expected values**
-- [ ] **Step 3: Commit:** `test(e2e): full simulation verification for refining math and arbitrage routes`
+- [x] **Step 1: Test Scenario: Seed realistic multi-city market prices across T4-T8**
+- [x] **Step 2: Verify zero-loss assertions: RRR refunds, tax deductions, and SPF rankings match exact expected values**
+- [x] **Step 3: Commit:** `test(e2e): full end-to-end market arbitrage and refining workflow verification`
 
 ---
 
