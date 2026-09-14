@@ -191,10 +191,10 @@ Files:
 - Create: `frontend/src/components/RefiningTable.astro`
 - Create: `frontend/src/pages/index.astro`
 
-- [ ] **Step 1: Build dense table ranking commodities by Silver per Focus (SPF) with tabular figures**
-- [ ] **Step 2: Add Data Freshness Badge (`<15m` Green, `15-60m` Amber, `>60m` Red Stale)**
-- [ ] **Step 3: Add 24h Trade Volume column with liquidity warning badge**
-- [ ] **Step 4: Commit:** `feat(frontend): refining matrix table with spf ranking and volume indicators`
+- [x] **Step 1: Build dense table ranking commodities by Silver per Focus (SPF) with tabular figures**
+- [x] **Step 2: Add Data Freshness Badge (`<15m` Green, `15-60m` Amber, `>60m` Red Stale)**
+- [x] **Step 3: Add 24h Trade Volume column with liquidity warning badge**
+- [x] **Step 4: Commit:** `feat(frontend): refining matrix table with spf ranking and volume indicators`
 
 ---
 
