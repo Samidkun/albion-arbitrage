@@ -31,11 +31,11 @@
 - Scaffold: `backend/` via `go mod init albionflow/backend`
 - Scaffold: `frontend/` (Astro 5 web application)
 
-- [ ] **Step 1: Setup root .gitignore and README.md**
-- [ ] **Step 2: Initialize Go module in `backend/` and install dependencies (`chi`, `modernc.org/sqlite`)**
-- [ ] **Step 3: Initialize Astro 5 frontend in `frontend/`**
-- [ ] **Step 4: Verify builds (`go build ./...` in backend & `npm run build` in frontend)**
-- [ ] **Step 5: Commit:** `chore: scaffold albionflow monorepo with go backend and astro frontend`
+- [x] **Step 1: Setup root .gitignore and README.md**
+- [x] **Step 2: Initialize Go module in `backend/` and install dependencies (`chi`, `modernc.org/sqlite`)**
+- [x] **Step 3: Initialize Astro 5 frontend in `frontend/`**
+- [x] **Step 4: Verify builds (`go build ./...` in backend & `npm run build` in frontend)**
+- [x] **Step 5: Commit:** `chore: scaffold albionflow monorepo with go backend and astro frontend`
 
 ---
 

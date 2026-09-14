@@ -1,0 +1,27 @@
+# Go
+backend/bin/
+backend/server
+*.exe
+*.test
+*.out
+backend/tmp/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.astro/
+node_modules/
+
+# Database / Data
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Temp / Scratch
+.superpowers/
+.env
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
