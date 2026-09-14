@@ -162,12 +162,12 @@ Files:
 - Create: `backend/cmd/server/handlers.go`
 - Test: `backend/cmd/server/handlers_test.go`
 
-- [ ] **Step 1: Wire Chi router with CORS and JSON middleware**
-- [ ] **Step 2: Implement `GET /api/v1/refining/matrix` (filterable by region, commodity, tier, station tax, tax channel)**
-- [ ] **Step 3: Implement `GET /api/v1/arbitrage/routes` (filterable by region, min profit, min 24h volume, freshness)**
-- [ ] **Step 4: Implement `POST /api/v1/prices/refresh` (triggers on-demand snapshot ingestion)**
-- [ ] **Step 5: Write HTTP endpoint integration tests**
-- [ ] **Step 6: Commit:** `feat(backend): http api server exposing refining matrix and arbitrage endpoints`
+- [x] **Step 1: Wire Chi router with CORS and JSON middleware**
+- [x] **Step 2: Implement `GET /api/v1/refining/matrix` (filterable by region, commodity, tier, station tax, tax channel)**
+- [x] **Step 3: Implement `GET /api/v1/arbitrage/routes` (filterable by region, min profit, min 24h volume, freshness)**
+- [x] **Step 4: Implement `POST /api/v1/prices/refresh` (triggers on-demand snapshot ingestion)**
+- [x] **Step 5: Write HTTP endpoint integration tests**
+- [x] **Step 6: Commit:** `feat(backend): http api server exposing refining matrix and arbitrage endpoints`
 
 ---
 

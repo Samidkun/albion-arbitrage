@@ -8,7 +8,7 @@ import (
 )
 
 func TestHealthzEndpoint(t *testing.T) {
-	router := setupRouter()
+	router := setupRouter(nil)
 
 	req, err := http.NewRequest(http.MethodGet, "/healthz", nil)
 	if err != nil {
