@@ -97,10 +97,10 @@ Files:
 - Create: `backend/pkg/engine/refining.go`
 - Test: `backend/pkg/engine/refining_test.go`
 
-- [ ] **Step 1: Implement hierarchical input cost calculation (T5 requires 3 raw + 1 T4 refined)**
-- [ ] **Step 2: Implement "Chained Refining" mode that eliminates intermediate market taxes**
-- [ ] **Step 3: Write unit tests comparing direct vs chained refining costs**
-- [ ] **Step 4: Commit:** `feat(backend): hierarchical refining engine with chained intermediate support`
+- [x] **Step 1: Implement hierarchical input cost calculation (T5 requires 3 raw + 1 T4 refined)**
+- [x] **Step 2: Implement "Chained Refining" mode that eliminates intermediate market taxes**
+- [x] **Step 3: Write unit tests comparing direct vs chained refining costs**
+- [x] **Step 4: Commit:** `feat(backend): hierarchical refining engine with chained intermediate support`
 
 ---
 
