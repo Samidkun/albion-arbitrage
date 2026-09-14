@@ -7,17 +7,17 @@
 
 ---
 
-## 1. Latar Belakang & Masalah Fatal
+## 1. Latar Belakang & Riset Masalah Pemain (Empirical Evidence)
 
-Di Albion Online, ekonomi digerakkan 100% oleh pemain (*player-driven economy*). Margin keuntungan dari **refining** (mengolah bahan mentah jadi balok/batangan/kain/kulit) dan **transport arbitrage** (beli murah di Kota A, jual mahal di Kota B/Caerleon) bernilai jutaan Silver per hari.
+Berdasarkan riset empiris dari keluhan pemain di komunitas (*Reddit r/albiononline*, forum resmi, dan bug reports open-source tools seperti *Brannstroom/albiononline-refining-calculator*), pemain sering menderita kerugian jutaan Silver akibat kelemahan fatal pada tools yang ada saat ini:
 
-Namun, mengolah data pasar memiliki **risiko fatal**:
-1. **Stale Data Trap:** Jika harga diambil dari snapshot yang sudah berumur 6–12 jam lalu, pemain bisa membawa modal puluhan juta Silver melintasi red/yellow zone dan mendapati harga sudah anjlok di kota tujuan.
-2. **Hierarchical Crafting Mistake:** Mengolah bahan T5–T8 tidak hanya butuh bahan mentah setara, tapi juga **1 unit refined material dari tier sebelumnya** (contoh: 1 unit T6 Bar butuh 3 T6 Ore + 1 T5 Bar). Jika kalkulator mengabaikan harga atau return rate pada tier sebelumnya, perhitungan profit 100% salah.
-3. **Station Fee & Nutrition Variance:** Pemilik toko pengrajin di kota menetapkan pajak nutrisi yang fluktuatif (misal 500 s/d 1800 silver per 100 nutrisi).
-4. **Market Tax & Order Fees:** Pemain non-premium terkena pajak 8% sedangkan premium 4%, ditambah biaya pasang order 2.5%. Salah menghitung pajak membuat transaksi yang tampak untung menjadi buntung.
+1. **Stale Data Trap:** Tools yang ada menarik data tanpa validasi umur (*timestamp age*). Pemain melihat selisih harga tinggi, membawa modal puluhan juta Silver antar-kota, ternyata harga tersebut berasal dari order 24 jam lalu yang sudah ludes.
+2. **Intermediate Tax Double-Counting (Bug Stacking Profit):** Saat pemain mengolah secara berantai (T4 -> T5 -> T6), tools yang ada memotong pajak pasar di setiap tier perantara, padahal pemain hanya membayar pajak pasar satu kali saat menjual produk akhir.
+3. **Stone Unique Mechanic Discrepancy:** Komoditas Stone (Batu) tidak memiliki enchantment (`.1`, `.2`, `.3`, `.4`). Tools generik sering memaksakan schema enchant pada batu sehingga menghasilkan angka kalkulasi yang korup.
+4. **Illiquidity Trap (Volume Buta):** Margin keuntungan 50% tidak ada gunanya jika volume perdagangan barang tersebut hanya 5 unit per hari di kota tujuan. Tools harus menyertakan data volume perdagangan 24 jam (`item_count` dari history endpoint AODP).
+5. **Channel Pajak Kaku:** Pemain sering menjual via Discord / Guild trade (0% pajak pasar) atau pasang Buy Order (hanya 2.5% setup fee). Tools harus menyediakan kustomisasi pajak transaksi secara fleksibel (0%, 2.5%, 4%, 8%).
 
-**Objektif:** Membangun engine berbasis web (*Astro + Go + SQLite*) dengan filter ketat terhadap kesegaran data (*data age guard*), audit trail perhitungan matematis transparan (*show the math*), dan presisi formula 100% cocok dengan mekanika game.
+**Objektif:** Membangun engine berbasis web (*Astro 5 + Go 1.27 + SQLite*) yang secara khusus menyelesaikan ke-5 masalah di atas dengan akurasi 100%.
 
 ---
 
