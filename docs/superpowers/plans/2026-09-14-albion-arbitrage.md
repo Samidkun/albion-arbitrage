@@ -136,11 +136,11 @@ Files:
 - Create: `backend/pkg/aodp/client.go`
 - Create: `backend/pkg/aodp/client_test.go`
 
-- [ ] **Step 1: Implement HTTP client supporting Asia, Americas, and Europe endpoints**
-- [ ] **Step 2: Parse price responses with zero-price sanitization (skip empty market slots)**
-- [ ] **Step 3: Store fetched prices and 24h volume into SQLite store**
-- [ ] **Step 4: Write tests with mock AODP HTTP responses**
-- [ ] **Step 5: Commit:** `feat(backend): aodp rest client with multi-region ingestion and zero-price filter`
+- [x] **Step 1: Implement HTTP client supporting Asia, Americas, and Europe endpoints**
+- [x] **Step 2: Parse price responses with zero-price sanitization (skip empty market slots)**
+- [x] **Step 3: Store fetched prices and 24h volume into SQLite store**
+- [x] **Step 4: Write tests with mock AODP HTTP responses**
+- [x] **Step 5: Commit:** `feat(backend): aodp rest client with multi-region ingestion and zero-price filter`
 
 ---
 
