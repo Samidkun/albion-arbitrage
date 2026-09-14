@@ -1,0 +1,2148 @@
+---
+// ArbitrageTable.astro - Cross-City Hauling Arbitrage Matrix Component
+// AlbionFlow Anti-UI-Slop High-Density Trade Route Scanner
+---
+
+<div class="arbitrage-matrix-container panel" id="arbitrage-matrix-container">
+  <!-- Filter & Control Bar -->
+  <div class="arbitrage-filter-bar">
+    <!-- Row 1: Route & Profit Filter -->
+    <div class="filter-row route-filter-row">
+      <div class="filter-group">
+        <label for="origin-city-select" class="filter-label">ORIGIN CITY:</label>
+        <div class="select-wrapper">
+          <select id="origin-city-select" class="custom-select" aria-label="Origin City">
+            <option value="ALL" selected>All Origin Cities</option>
+            <option value="Thetford">Thetford (Ore Hub)</option>
+            <option value="Fort Sterling">Fort Sterling (Wood Hub)</option>
+            <option value="Lymhurst">Lymhurst (Fiber Hub)</option>
+            <option value="Bridgewatch">Bridgewatch (Stone Hub)</option>
+            <option value="Martlock">Martlock (Hide Hub)</option>
+            <option value="Caerleon">Caerleon (Red Zone Hub)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="swap-action-wrap">
+        <button type="button" id="swap-cities-btn" class="swap-btn" title="Swap Origin and Target Cities">
+          ⇄
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <label for="target-city-select" class="filter-label">TARGET CITY:</label>
+        <div class="select-wrapper">
+          <select id="target-city-select" class="custom-select" aria-label="Target City">
+            <option value="ALL" selected>All Target Cities</option>
+            <option value="Caerleon">Caerleon (Red Zone Hub)</option>
+            <option value="Thetford">Thetford</option>
+            <option value="Fort Sterling">Fort Sterling</option>
+            <option value="Lymhurst">Lymhurst</option>
+            <option value="Bridgewatch">Bridgewatch</option>
+            <option value="Martlock">Martlock</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-group profit-input-group">
+        <label for="min-profit-input" class="filter-label">MIN NET PROFIT:</label>
+        <div class="input-with-unit">
+          <input
+            type="number"
+            id="min-profit-input"
+            class="custom-num-input tabular-figures"
+            min="0"
+            step="100"
+            value="0"
+            placeholder="0"
+            aria-label="Minimum Net Profit Silver"
+          />
+          <span class="input-unit">Silver</span>
+        </div>
+      </div>
+
+      <div class="filter-group reset-group">
+        <button type="button" id="reset-filters-btn" class="reset-btn" title="Reset all filters to defaults">
+          Reset Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 2: Tax Mechanism & Risk Thresholds -->
+    <div class="filter-row tax-risk-row">
+      <div class="filter-group">
+        <label for="tax-channel-select" class="filter-label">TAX CHANNEL:</label>
+        <div class="select-wrapper">
+          <select id="tax-channel-select" class="custom-select" aria-label="Tax Channel">
+            <option value="sell_order" selected>Sell Order (2.5% fee + 4% tax)</option>
+            <option value="instant_buy">Instant Buy Order (4% tax)</option>
+            <option value="direct">Direct Trade / Discord (0% tax)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">PREMIUM STATUS:</span>
+        <button
+          type="button"
+          id="premium-toggle-btn"
+          class="toggle-btn active"
+          role="switch"
+          aria-checked="true"
+        >
+          <span class="toggle-indicator"></span>
+          <span id="premium-status-label" class="tabular-figures">Premium Active (4% Tax)</span>
+        </button>
+      </div>
+
+      <div class="filter-group checkboxes-group">
+        <label class="custom-checkbox-label">
+          <input type="checkbox" id="exclude-stale-check" checked />
+          <span class="checkbox-text">Exclude Stale (&gt;60m)</span>
+        </label>
+
+        <label class="custom-checkbox-label">
+          <input type="checkbox" id="exclude-illiquid-check" checked />
+          <span class="checkbox-text">Exclude Illiquid (&lt;15/day)</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Toolbar -->
+  <div class="table-toolbar">
+    <div class="toolbar-left">
+      <div class="table-headline">
+        <span class="toolbar-title">HAULING MATRIX</span>
+        <span class="count-badge tabular-figures" id="routes-count-badge">0 Routes</span>
+      </div>
+      <div class="source-status" id="arbitrage-status-badge">
+        <span class="status-dot"></span>
+        <span class="status-label" id="arbitrage-status-label">Connecting to Scanner...</span>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <div class="sort-controls">
+        <span class="sort-label">SORT BY:</span>
+        <div class="sort-buttons" role="group" aria-label="Sort Options">
+          <button type="button" class="sort-btn active" data-sort="profit" title="Sort by Net Unit Profit">
+            Profit <span class="sort-arrow" id="sort-profit-arrow">▼</span>
+          </button>
+          <button type="button" class="sort-btn" data-sort="margin" title="Sort by Net Margin Percent">
+            Margin % <span class="sort-arrow" id="sort-margin-arrow"></span>
+          </button>
+          <button type="button" class="sort-btn" data-sort="volume" title="Sort by 24h Traded Volume">
+            Volume <span class="sort-arrow" id="sort-volume-arrow"></span>
+          </button>
+          <button type="button" class="sort-btn" data-sort="buy_price" title="Sort by Buy Price at Origin">
+            Buy Price <span class="sort-arrow" id="sort-buy-price-arrow"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrollable Matrix Table -->
+  <div class="table-scroll-wrapper">
+    <table class="arbitrage-table" id="arbitrage-routes-table" aria-label="Arbitrage Routes Table">
+      <thead>
+        <tr>
+          <th scope="col" class="th-tier">TIER / ENC</th>
+          <th scope="col" class="th-item">ITEM NAME</th>
+          <th scope="col" class="th-route">ROUTE (ORIGIN ➔ TARGET)</th>
+          <th scope="col" class="th-buy sortable-th" data-sort-key="buy_price">
+            <span class="th-content">BUY @ ORIGIN <span class="col-sort-icon" id="col-sort-buy_price"></span></span>
+          </th>
+          <th scope="col" class="th-sell">
+            <span class="th-content">SELL @ TARGET</span>
+          </th>
+          <th scope="col" class="th-profit sortable-th active-sort" data-sort-key="profit">
+            <span class="th-content">NET UNIT PROFIT <span class="col-sort-icon" id="col-sort-profit">▼</span></span>
+          </th>
+          <th scope="col" class="th-margin sortable-th" data-sort-key="margin">
+            <span class="th-content">NET MARGIN % <span class="col-sort-icon" id="col-sort-margin"></span></span>
+          </th>
+          <th scope="col" class="th-volume sortable-th" data-sort-key="volume">
+            <span class="th-content">TARGET 24H VOLUME <span class="col-sort-icon" id="col-sort-volume"></span></span>
+          </th>
+          <th scope="col" class="th-risk">RISK TAG</th>
+        </tr>
+      </thead>
+      <tbody id="arbitrage-table-body">
+        <tr class="loading-row">
+          <td colspan="9" class="loading-cell">
+            <div class="loading-spinner-wrap">
+              <span class="loading-spinner"></span>
+              <span>Scanning cross-city arbitrage routes...</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty State Banner -->
+  <div class="empty-state" id="arbitrage-empty-state" style="display: none;">
+    <div class="empty-icon">⊘</div>
+    <div class="empty-title">No Profitable Arbitrage Routes Found</div>
+    <div class="empty-desc">
+      No trade routes match your current city pair, minimum profit, and stale/liquidity filters. Try clearing city filters or lowering the minimum profit threshold.
+    </div>
+  </div>
+
+  <!-- Table Legend Footer -->
+  <div class="table-legend">
+    <div class="legend-item">
+      <span class="legend-dot green"></span>
+      <span>Fresh (&lt;15m)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot amber"></span>
+      <span>Aging (15-60m)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot red"></span>
+      <span>Stale (&gt;60m STALE)</span>
+    </div>
+    <div class="legend-divider"></div>
+    <div class="legend-item">
+      <span class="legend-badge-sample safe">SAFE ROUTE</span>
+      <span>= Fresh Quote + Liquid Market</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge-sample aging">AGING CAUTION</span>
+      <span>= Price Quote 15-60m Old</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge-sample illiquid">ILLIQUID / STALE</span>
+      <span>= High Slippage Risk</span>
+    </div>
+    <div class="legend-divider"></div>
+    <div class="legend-item">
+      <span class="legend-lime tabular-figures">+Net Profit</span>
+      <span>= Clean profit after deduction of sales tax & setup fee</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .arbitrage-matrix-container {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Filter Bar */
+  .arbitrage-filter-bar {
+    padding: 1rem 1.25rem;
+    background-color: var(--surface-primary);
+    border-bottom: 1px solid var(--border-hairline);
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .route-filter-row {
+    align-items: flex-end;
+  }
+
+  .tax-risk-row {
+    align-items: center;
+    padding-top: 0.65rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.06);
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .filter-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .select-wrapper {
+    position: relative;
+    min-width: 180px;
+  }
+
+  .custom-select {
+    width: 100%;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    padding: 0.4rem 0.65rem;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+
+  .custom-select:hover,
+  .custom-select:focus {
+    border-color: var(--accent-primary);
+  }
+
+  .swap-action-wrap {
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 1px;
+  }
+
+  .swap-btn {
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .swap-btn:hover {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+  }
+
+  .profit-input-group {
+    min-width: 150px;
+  }
+
+  .input-with-unit {
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-hairline);
+    border-radius: 3px;
+    padding-right: 0.6rem;
+    transition: border-color 0.15s ease;
+  }
+
+  .input-with-unit:focus-within {
+    border-color: var(--accent-primary);
+  }
+
+  .custom-num-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    padding: 0.4rem 0.5rem 0.4rem 0.65rem;
+  }
+
+  .input-unit {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+
+  .reset-group {
+    margin-left: auto;
+  }
+
+  .reset-btn {
+    background-color: transparent;
+    border: 1px solid var(--border-hairline);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .reset-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+  }
+
+  /* Toggle Button */
+  .toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-hairline);
+    border-radius: 3px;
+    padding: 0.38rem 0.65rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .toggle-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--border-hairline);
+  }
+
+  .toggle-btn.active {
+    background-color: var(--surface-elevated);
+    border-color: var(--border-hairline);
+    color: var(--text-primary);
+  }
+
+  .toggle-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background-color: var(--border-hairline);
+    flex-shrink: 0;
+    transition: background-color 0.15s ease;
+  }
+
+  .toggle-btn.active .toggle-indicator {
+    background-color: var(--accent-primary);
+  }
+
+  /* Checkboxes */
+  .checkboxes-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 1.25rem;
+    margin-left: 0.5rem;
+  }
+
+  .custom-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .custom-checkbox-label input[type="checkbox"] {
+    accent-color: var(--accent-primary);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+  }
+
+  /* Toolbar */
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border-hairline);
+    background-color: var(--surface-primary);
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .table-headline {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .toolbar-title {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.88rem;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+
+  .count-badge {
+    font-size: 0.72rem;
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-secondary);
+    padding: 0.1rem 0.45rem;
+    border-radius: 3px;
+  }
+
+  .source-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  .source-status.live {
+    color: var(--accent-mint);
+  }
+
+  .source-status.offline {
+    color: var(--accent-amber);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .sort-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  .sort-buttons {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .sort-btn {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.15s ease;
+  }
+
+  .sort-btn:hover {
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .sort-btn.active {
+    background-color: var(--border-hairline);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    font-weight: 700;
+  }
+
+  .sort-arrow {
+    font-size: 0.65rem;
+  }
+
+  /* Table Styles */
+  .table-scroll-wrapper {
+    overflow-x: auto;
+    width: 100%;
+    background-color: var(--bg-primary);
+  }
+
+  .arbitrage-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  .arbitrage-table thead th {
+    background-color: var(--surface-primary);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid var(--border-hairline);
+    user-select: none;
+  }
+
+  .sortable-th {
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .sortable-th:hover {
+    color: var(--text-primary);
+    background-color: var(--surface-elevated);
+  }
+
+  .sortable-th.active-sort {
+    color: var(--accent-primary);
+    background-color: rgba(199, 245, 59, 0.04);
+  }
+
+  .th-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .col-sort-icon {
+    font-size: 0.65rem;
+    color: var(--accent-primary);
+  }
+
+  .num-cell-right,
+  th.num-cell-right {
+    text-align: right;
+  }
+
+  .arbitrage-table tbody td {
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid var(--border-hairline);
+    vertical-align: middle;
+  }
+
+  .arbitrage-table tbody tr {
+    transition: background-color 0.12s ease;
+  }
+
+  .arbitrage-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+
+  /* Column Specific Cell Styles */
+  .tier-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 0.74rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-primary);
+  }
+
+  .tier-t4 { border-color: #5A6270; color: #D1D5DB; }
+  .tier-t5 { border-color: rgba(56, 189, 248, 0.4); color: #38BDF8; }
+  .tier-t6 { border-color: rgba(245, 158, 11, 0.4); color: #F59E0B; }
+  .tier-t7 { border-color: rgba(239, 68, 68, 0.4); color: #EF4444; }
+  .tier-t8 { border-color: rgba(168, 85, 247, 0.5); color: #C084FC; }
+
+  .item-cell {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .item-name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .item-sub {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .route-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .city-name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .city-name.caerleon {
+    color: #F87171;
+  }
+
+  .route-arrow {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .price-cell-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+  }
+
+  .price-val {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .silver-unit {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: 0.2rem;
+  }
+
+  /* Age Badges */
+  .age-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.1rem 0.38rem;
+    border-radius: 3px;
+    border: 1px solid transparent;
+  }
+
+  .age-badge .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+
+  .age-badge.fresh {
+    background-color: rgba(78, 229, 182, 0.08);
+    border-color: rgba(78, 229, 182, 0.25);
+    color: var(--accent-mint);
+  }
+  .age-badge.fresh .dot {
+    background-color: var(--accent-mint);
+  }
+
+  .age-badge.aging {
+    background-color: rgba(245, 166, 35, 0.08);
+    border-color: rgba(245, 166, 35, 0.25);
+    color: var(--accent-amber);
+  }
+  .age-badge.aging .dot {
+    background-color: var(--accent-amber);
+  }
+
+  .age-badge.stale {
+    background-color: rgba(255, 77, 77, 0.1);
+    border-color: rgba(255, 77, 77, 0.3);
+    color: var(--accent-danger);
+  }
+  .age-badge.stale .dot {
+    background-color: var(--accent-danger);
+  }
+
+  /* Net Profit */
+  .net-profit-val {
+    font-weight: 700;
+    font-size: 0.88rem;
+  }
+
+  .net-profit-val.positive {
+    color: var(--accent-primary); /* Electric Lime #C7F53B */
+  }
+
+  .net-profit-val.negative {
+    color: var(--accent-danger);
+  }
+
+  /* Net Margin */
+  .net-margin-val {
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  .net-margin-val.positive {
+    color: var(--accent-primary);
+    background-color: rgba(199, 245, 59, 0.08);
+    border: 1px solid rgba(199, 245, 59, 0.25);
+  }
+
+  .net-margin-val.negative {
+    color: var(--accent-danger);
+    background-color: rgba(255, 77, 77, 0.08);
+    border: 1px solid rgba(255, 77, 77, 0.25);
+  }
+
+  /* Target 24h Volume */
+  .volume-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+  }
+
+  .volume-val {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .liq-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.08rem 0.35rem;
+    border-radius: 2px;
+    letter-spacing: 0.02em;
+  }
+
+  .liq-badge.liq-high {
+    background-color: rgba(78, 229, 182, 0.1);
+    color: var(--accent-mint);
+  }
+
+  .liq-badge.liq-med {
+    background-color: rgba(56, 189, 248, 0.1);
+    color: #38BDF8;
+  }
+
+  .liq-badge.liq-low {
+    background-color: rgba(255, 77, 77, 0.12);
+    color: var(--accent-danger);
+  }
+
+  /* Risk Tags */
+  .risk-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .risk-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+
+  .risk-tag.safe {
+    background-color: rgba(78, 229, 182, 0.1);
+    border: 1px solid rgba(78, 229, 182, 0.35);
+    color: var(--accent-mint);
+  }
+
+  .risk-tag.aging {
+    background-color: rgba(245, 166, 35, 0.1);
+    border: 1px solid rgba(245, 166, 35, 0.35);
+    color: var(--accent-amber);
+  }
+
+  .risk-tag.stale {
+    background-color: rgba(255, 77, 77, 0.12);
+    border: 1px solid rgba(255, 77, 77, 0.35);
+    color: var(--accent-danger);
+  }
+
+  .risk-tag.illiquid {
+    background-color: rgba(255, 77, 77, 0.12);
+    border: 1px solid rgba(255, 77, 77, 0.35);
+    color: var(--accent-danger);
+  }
+
+  /* Loading Row */
+  .loading-row td {
+    padding: 3.5rem 1rem;
+    text-align: center;
+  }
+
+  .loading-spinner-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+  }
+
+  .loading-spinner {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border-hairline);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Empty State */
+  .empty-state {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    background-color: var(--bg-primary);
+    border-bottom: 1px solid var(--border-hairline);
+  }
+
+  .empty-icon {
+    font-size: 2.2rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-title {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.3rem;
+  }
+
+  .empty-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* Legend Footer */
+  .table-legend {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 0.65rem 1.25rem;
+    background-color: var(--surface-primary);
+    border-top: 1px solid var(--border-hairline);
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .legend-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .legend-dot.green { background-color: var(--accent-mint); }
+  .legend-dot.amber { background-color: var(--accent-amber); }
+  .legend-dot.red { background-color: var(--accent-danger); }
+
+  .legend-badge-sample {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.1rem 0.35rem;
+    border-radius: 2px;
+  }
+
+  .legend-badge-sample.safe {
+    background-color: rgba(78, 229, 182, 0.15);
+    color: var(--accent-mint);
+  }
+
+  .legend-badge-sample.aging {
+    background-color: rgba(245, 166, 35, 0.15);
+    color: var(--accent-amber);
+  }
+
+  .legend-badge-sample.illiquid {
+    background-color: rgba(255, 77, 77, 0.15);
+    color: var(--accent-danger);
+  }
+
+  .legend-lime {
+    color: var(--accent-primary);
+    font-weight: 700;
+  }
+
+  .legend-divider {
+    width: 1px;
+    height: 12px;
+    background-color: var(--border-hairline);
+  }
+
+  @media (max-width: 900px) {
+    .filter-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .swap-action-wrap {
+      align-self: center;
+    }
+    .reset-group {
+      margin-left: 0;
+    }
+    .checkboxes-group {
+      margin-left: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+  }
+</style>
+
+<script>
+  // TypeScript Client-side Arbitrage Logic
+  interface ArbitrageRoute {
+    item_id: string;
+    origin_city: string;
+    target_city: string;
+    buy_price: number;
+    buy_price_age: number | string;
+    is_buy_stale: boolean;
+    sell_price: number;
+    sell_price_age: number | string;
+    is_sell_stale: boolean;
+    is_stale_route: boolean;
+    tax_channel: string;
+    sales_tax_rate: number;
+    setup_fee_rate: number;
+    gross_revenue: number;
+    net_revenue: number;
+    net_profit_per_unit: number;
+    net_margin_percent: number;
+    traded_volume_24h: number;
+    is_illiquid: boolean;
+  }
+
+  interface ArbitrageState {
+    region: string;
+    originCity: string;
+    targetCity: string;
+    minProfit: number;
+    taxChannel: string;
+    premium: boolean;
+    excludeStale: boolean;
+    excludeIlliquid: boolean;
+    sortKey: 'profit' | 'margin' | 'volume' | 'buy_price';
+    sortOrder: 'asc' | 'desc';
+  }
+
+  const COMMODITY_NAMES: Record<string, Record<number, { raw: string; refined: string }>> = {
+    wood: {
+      4: { raw: 'Pine Logs', refined: 'Pine Planks' },
+      5: { raw: 'Cedar Logs', refined: 'Cedar Planks' },
+      6: { raw: 'Bloodoak Logs', refined: 'Bloodoak Planks' },
+      7: { raw: 'Ashenbark Logs', refined: 'Ashenbark Planks' },
+      8: { raw: 'Whitewood Logs', refined: 'Whitewood Planks' }
+    },
+    ore: {
+      4: { raw: 'Iron Ore', refined: 'Steel Bar' },
+      5: { raw: 'Titanium Ore', refined: 'Titanium Bar' },
+      6: { raw: 'Runite Ore', refined: 'Runite Bar' },
+      7: { raw: 'Meteorite Ore', refined: 'Meteorite Bar' },
+      8: { raw: 'Adamantium Ore', refined: 'Adamantium Bar' }
+    },
+    fiber: {
+      4: { raw: 'Hemp', refined: 'Fine Cloth' },
+      5: { raw: 'Skyflower', refined: 'Ornate Cloth' },
+      6: { raw: 'Redleaf Cotton', refined: 'Lavish Cloth' },
+      7: { raw: 'Sunflax', refined: 'Opulent Cloth' },
+      8: { raw: 'Ghost Hemp', refined: 'Barbed Cloth' }
+    },
+    hide: {
+      4: { raw: 'Medium Hide', refined: 'Medium Leather' },
+      5: { raw: 'Heavy Hide', refined: 'Heavy Leather' },
+      6: { raw: 'Robust Hide', refined: 'Robust Leather' },
+      7: { raw: 'Thick Hide', refined: 'Thick Leather' },
+      8: { raw: 'Resilient Hide', refined: 'Resilient Leather' }
+    },
+    stone: {
+      4: { raw: 'Travertine', refined: 'Travertine Block' },
+      5: { raw: 'Granite', refined: 'Granite Block' },
+      6: { raw: 'Slate', refined: 'Slate Block' },
+      7: { raw: 'Basalt', refined: 'Basalt Block' },
+      8: { raw: 'Marble', refined: 'Marble Block' }
+    }
+  };
+
+  const FALLBACK_ROUTES_DATA: ArbitrageRoute[] = [
+    {
+      item_id: 'T6_PLANKS_LEVEL1@1',
+      origin_city: 'Fort Sterling',
+      target_city: 'Caerleon',
+      buy_price: 3600,
+      buy_price_age: 480, // 8m ago
+      is_buy_stale: false,
+      sell_price: 5400,
+      sell_price_age: 540, // 9m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 5400,
+      net_revenue: 5049,
+      net_profit_per_unit: 1449,
+      net_margin_percent: 40.25,
+      traded_volume_24h: 185,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T5_METALBAR',
+      origin_city: 'Thetford',
+      target_city: 'Martlock',
+      buy_price: 920,
+      buy_price_age: 600, // 10m ago
+      is_buy_stale: false,
+      sell_price: 1450,
+      sell_price_age: 2700, // 45m ago -> AGING
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 1450,
+      net_revenue: 1355.75,
+      net_profit_per_unit: 435.75,
+      net_margin_percent: 47.36,
+      traded_volume_24h: 420,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T7_CLOTH',
+      origin_city: 'Lymhurst',
+      target_city: 'Caerleon',
+      buy_price: 14200,
+      buy_price_age: 720, // 12m ago
+      is_buy_stale: false,
+      sell_price: 21500,
+      sell_price_age: 840, // 14m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 21500,
+      net_revenue: 20102.5,
+      net_profit_per_unit: 5902.5,
+      net_margin_percent: 41.57,
+      traded_volume_24h: 95,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T6_LEATHER',
+      origin_city: 'Martlock',
+      target_city: 'Caerleon',
+      buy_price: 3100,
+      buy_price_age: 360, // 6m ago
+      is_buy_stale: false,
+      sell_price: 4600,
+      sell_price_age: 480, // 8m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 4600,
+      net_revenue: 4301,
+      net_profit_per_unit: 1201,
+      net_margin_percent: 38.74,
+      traded_volume_24h: 210,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T5_STONEBLOCK',
+      origin_city: 'Bridgewatch',
+      target_city: 'Thetford',
+      buy_price: 720,
+      buy_price_age: 2100, // 35m ago
+      is_buy_stale: false,
+      sell_price: 1120,
+      sell_price_age: 2400, // 40m ago -> AGING
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 1120,
+      net_revenue: 1047.2,
+      net_profit_per_unit: 327.2,
+      net_margin_percent: 45.44,
+      traded_volume_24h: 350,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T8_WOOD',
+      origin_city: 'Fort Sterling',
+      target_city: 'Caerleon',
+      buy_price: 24500,
+      buy_price_age: 4200, // 70m ago -> STALE
+      is_buy_stale: true,
+      sell_price: 37000,
+      sell_price_age: 4500, // 75m ago -> STALE
+      is_sell_stale: true,
+      is_stale_route: true,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 37000,
+      net_revenue: 34595,
+      net_profit_per_unit: 10095,
+      net_margin_percent: 41.2,
+      traded_volume_24h: 40,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T7_LEATHER_LEVEL2@2',
+      origin_city: 'Martlock',
+      target_city: 'Bridgewatch',
+      buy_price: 38000,
+      buy_price_age: 480, // 8m ago
+      is_buy_stale: false,
+      sell_price: 54000,
+      sell_price_age: 600, // 10m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 54000,
+      net_revenue: 50490,
+      net_profit_per_unit: 12490,
+      net_margin_percent: 32.87,
+      traded_volume_24h: 8, // ILLIQUID
+      is_illiquid: true
+    },
+    {
+      item_id: 'T4_PLANKS',
+      origin_city: 'Fort Sterling',
+      target_city: 'Caerleon',
+      buy_price: 210,
+      buy_price_age: 240, // 4m ago
+      is_buy_stale: false,
+      sell_price: 345,
+      sell_price_age: 360, // 6m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 345,
+      net_revenue: 322.58,
+      net_profit_per_unit: 112.58,
+      net_margin_percent: 53.61,
+      traded_volume_24h: 3200,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T6_METALBAR_LEVEL1@1',
+      origin_city: 'Thetford',
+      target_city: 'Fort Sterling',
+      buy_price: 8800,
+      buy_price_age: 420, // 7m ago
+      is_buy_stale: false,
+      sell_price: 12600,
+      sell_price_age: 600, // 10m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 12600,
+      net_revenue: 11781,
+      net_profit_per_unit: 2981,
+      net_margin_percent: 33.88,
+      traded_volume_24h: 110,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T4_ORE',
+      origin_city: 'Thetford',
+      target_city: 'Caerleon',
+      buy_price: 85,
+      buy_price_age: 180, // 3m ago
+      is_buy_stale: false,
+      sell_price: 138,
+      sell_price_age: 240, // 4m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 138,
+      net_revenue: 129.03,
+      net_profit_per_unit: 44.03,
+      net_margin_percent: 51.8,
+      traded_volume_24h: 5800,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T7_PLANKS',
+      origin_city: 'Fort Sterling',
+      target_city: 'Lymhurst',
+      buy_price: 11500,
+      buy_price_age: 2100, // 35m ago
+      is_buy_stale: false,
+      sell_price: 16500,
+      sell_price_age: 2500, // 41m ago -> AGING
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 16500,
+      net_revenue: 15427.5,
+      net_profit_per_unit: 3927.5,
+      net_margin_percent: 34.15,
+      traded_volume_24h: 75,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T8_METALBAR',
+      origin_city: 'Thetford',
+      target_city: 'Caerleon',
+      buy_price: 46000,
+      buy_price_age: 480, // 8m ago
+      is_buy_stale: false,
+      sell_price: 68500,
+      sell_price_age: 660, // 11m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 68500,
+      net_revenue: 64047.5,
+      net_profit_per_unit: 18047.5,
+      net_margin_percent: 39.23,
+      traded_volume_24h: 65,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T5_CLOTH',
+      origin_city: 'Lymhurst',
+      target_city: 'Fort Sterling',
+      buy_price: 1250,
+      buy_price_age: 360, // 6m ago
+      is_buy_stale: false,
+      sell_price: 1850,
+      sell_price_age: 420, // 7m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 1850,
+      net_revenue: 1729.75,
+      net_profit_per_unit: 479.75,
+      net_margin_percent: 38.38,
+      traded_volume_24h: 680,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T4_LEATHER',
+      origin_city: 'Martlock',
+      target_city: 'Bridgewatch',
+      buy_price: 260,
+      buy_price_age: 420, // 7m ago
+      is_buy_stale: false,
+      sell_price: 410,
+      sell_price_age: 540, // 9m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 410,
+      net_revenue: 383.35,
+      net_profit_per_unit: 123.35,
+      net_margin_percent: 47.44,
+      traded_volume_24h: 2400,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T6_STONEBLOCK',
+      origin_city: 'Bridgewatch',
+      target_city: 'Caerleon',
+      buy_price: 2400,
+      buy_price_age: 600, // 10m ago
+      is_buy_stale: false,
+      sell_price: 3600,
+      sell_price_age: 720, // 12m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 3600,
+      net_revenue: 3366,
+      net_profit_per_unit: 966,
+      net_margin_percent: 40.25,
+      traded_volume_24h: 180,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T8_CLOTH',
+      origin_city: 'Lymhurst',
+      target_city: 'Martlock',
+      buy_price: 49000,
+      buy_price_age: 4500, // 75m ago -> STALE
+      is_buy_stale: true,
+      sell_price: 69000,
+      sell_price_age: 4800, // 80m ago -> STALE
+      is_sell_stale: true,
+      is_stale_route: true,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 69000,
+      net_revenue: 64515,
+      net_profit_per_unit: 15515,
+      net_margin_percent: 31.66,
+      traded_volume_24h: 25,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T5_WOOD',
+      origin_city: 'Fort Sterling',
+      target_city: 'Thetford',
+      buy_price: 320,
+      buy_price_age: 300, // 5m ago
+      is_buy_stale: false,
+      sell_price: 490,
+      sell_price_age: 360, // 6m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 490,
+      net_revenue: 458.15,
+      net_profit_per_unit: 138.15,
+      net_margin_percent: 43.17,
+      traded_volume_24h: 1200,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T7_ROCK',
+      origin_city: 'Bridgewatch',
+      target_city: 'Lymhurst',
+      buy_price: 4800,
+      buy_price_age: 540, // 9m ago
+      is_buy_stale: false,
+      sell_price: 7400,
+      sell_price_age: 660, // 11m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 7400,
+      net_revenue: 6919,
+      net_profit_per_unit: 2119,
+      net_margin_percent: 44.15,
+      traded_volume_24h: 10, // ILLIQUID
+      is_illiquid: true
+    },
+    {
+      item_id: 'T5_FIBER',
+      origin_city: 'Lymhurst',
+      target_city: 'Caerleon',
+      buy_price: 280,
+      buy_price_age: 360, // 6m ago
+      is_buy_stale: false,
+      sell_price: 430,
+      sell_price_age: 480, // 8m ago
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 430,
+      net_revenue: 402.05,
+      net_profit_per_unit: 122.05,
+      net_margin_percent: 43.59,
+      traded_volume_24h: 1650,
+      is_illiquid: false
+    },
+    {
+      item_id: 'T6_WOOD',
+      origin_city: 'Fort Sterling',
+      target_city: 'Martlock',
+      buy_price: 1100,
+      buy_price_age: 2400, // 40m ago -> AGING
+      is_buy_stale: false,
+      sell_price: 1620,
+      sell_price_age: 2700, // 45m ago -> AGING
+      is_sell_stale: false,
+      is_stale_route: false,
+      tax_channel: 'sell_order',
+      sales_tax_rate: 0.04,
+      setup_fee_rate: 0.025,
+      gross_revenue: 1620,
+      net_revenue: 1514.7,
+      net_profit_per_unit: 414.7,
+      net_margin_percent: 37.7,
+      traded_volume_24h: 480,
+      is_illiquid: false
+    }
+  ];
+
+  // Helper Functions
+  function parseDurationSeconds(age: number | string | undefined): number {
+    if (age === undefined || age === null) return 0;
+    if (typeof age === 'number') {
+      if (age > 1_000_000_000) {
+        return Math.round(age / 1_000_000_000);
+      }
+      return Math.round(age);
+    }
+    if (typeof age === 'string') {
+      let totalSec = 0;
+      const hoursMatch = age.match(/(\d+)h/);
+      const minsMatch = age.match(/(\d+)m/);
+      const secsMatch = age.match(/(\d+)s/);
+      if (hoursMatch) totalSec += parseInt(hoursMatch[1], 10) * 3600;
+      if (minsMatch) totalSec += parseInt(minsMatch[1], 10) * 60;
+      if (secsMatch) totalSec += parseInt(secsMatch[1], 10);
+      if (totalSec > 0) return totalSec;
+      const parsed = parseFloat(age);
+      if (!isNaN(parsed)) {
+        if (parsed > 1_000_000_000) return Math.round(parsed / 1_000_000_000);
+        return Math.round(parsed);
+      }
+    }
+    return 0;
+  }
+
+  function formatAgeBadge(seconds: number, isStaleFlag?: boolean): { text: string; cssClass: 'fresh' | 'aging' | 'stale' } {
+    if (isStaleFlag || seconds > 3600) {
+      return { text: '>60m STALE', cssClass: 'stale' };
+    }
+    if (seconds < 60) {
+      return { text: 'Just now', cssClass: 'fresh' };
+    }
+    const mins = Math.floor(seconds / 60);
+    if (mins < 15) {
+      return { text: `${mins}m ago`, cssClass: 'fresh' };
+    }
+    return { text: `${mins}m ago`, cssClass: 'aging' };
+  }
+
+  function getLiquidityBadge(vol: number, isIlliquid: boolean): { text: string; cssClass: string } {
+    if (isIlliquid || vol < 15) {
+      return { text: 'Illiquid', cssClass: 'liq-low' };
+    }
+    if (vol >= 500) {
+      return { text: 'High', cssClass: 'liq-high' };
+    }
+    return { text: 'Med', cssClass: 'liq-med' };
+  }
+
+  function getRouteRisk(route: ArbitrageRoute): { text: string; cssClass: 'safe' | 'aging' | 'stale' | 'illiquid' } {
+    const buySec = parseDurationSeconds(route.buy_price_age);
+    const sellSec = parseDurationSeconds(route.sell_price_age);
+
+    const isStale = route.is_stale_route || route.is_buy_stale || route.is_sell_stale || buySec > 3600 || sellSec > 3600;
+    if (isStale) {
+      return { text: 'STALE QUOTE', cssClass: 'stale' };
+    }
+
+    if (route.is_illiquid || route.traded_volume_24h < 15) {
+      return { text: 'ILLIQUID', cssClass: 'illiquid' };
+    }
+
+    if (buySec > 900 || sellSec > 900) {
+      return { text: 'AGING CAUTION', cssClass: 'aging' };
+    }
+
+    return { text: 'SAFE ROUTE', cssClass: 'safe' };
+  }
+
+  function parseItemInfo(itemId: string) {
+    const match = itemId.match(/^T(\d+)_([A-Z]+)(?:_LEVEL(\d+)@\d+)?$/);
+    if (!match) {
+      return {
+        tier: 4,
+        enchantment: 0,
+        tierEnc: 'T4.0',
+        name: itemId,
+        commodity: 'wood',
+        isRefined: true
+      };
+    }
+
+    const tier = parseInt(match[1], 10);
+    const resourceType = match[2];
+    const enchantment = match[3] ? parseInt(match[3], 10) : 0;
+    const tierEnc = enchantment > 0 ? `T${tier}.${enchantment}` : `T${tier}.0`;
+
+    let commodity = 'wood';
+    let isRefined = true;
+
+    switch (resourceType) {
+      case 'WOOD':
+        commodity = 'wood';
+        isRefined = false;
+        break;
+      case 'PLANKS':
+        commodity = 'wood';
+        isRefined = true;
+        break;
+      case 'ORE':
+        commodity = 'ore';
+        isRefined = false;
+        break;
+      case 'METALBAR':
+        commodity = 'ore';
+        isRefined = true;
+        break;
+      case 'FIBER':
+        commodity = 'fiber';
+        isRefined = false;
+        break;
+      case 'CLOTH':
+        commodity = 'fiber';
+        isRefined = true;
+        break;
+      case 'HIDE':
+        commodity = 'hide';
+        isRefined = false;
+        break;
+      case 'LEATHER':
+        commodity = 'hide';
+        isRefined = true;
+        break;
+      case 'ROCK':
+        commodity = 'stone';
+        isRefined = false;
+        break;
+      case 'STONEBLOCK':
+        commodity = 'stone';
+        isRefined = true;
+        break;
+    }
+
+    const names = COMMODITY_NAMES[commodity]?.[tier];
+    let baseName = itemId;
+    if (names) {
+      baseName = isRefined ? names.refined : names.raw;
+    }
+    if (enchantment > 0 && !baseName.includes(`.${enchantment}`)) {
+      baseName = `${baseName} (.${enchantment})`;
+    }
+
+    return {
+      tier,
+      enchantment,
+      tierEnc,
+      name: baseName,
+      commodity,
+      isRefined
+    };
+  }
+
+  function formatSilver(val: number): string {
+    return Math.round(val).toLocaleString('id-ID');
+  }
+
+  function recalculateRouteTaxes(route: ArbitrageRoute, channel: string, isPremium: boolean): ArbitrageRoute {
+    let salesTaxRate = 0.04;
+    let setupFeeRate = 0.025;
+
+    if (channel === 'direct') {
+      salesTaxRate = 0;
+      setupFeeRate = 0;
+    } else if (channel === 'instant_buy') {
+      salesTaxRate = isPremium ? 0.04 : 0.08;
+      setupFeeRate = 0;
+    } else {
+      salesTaxRate = isPremium ? 0.04 : 0.08;
+      setupFeeRate = 0.025;
+    }
+
+    const grossRevenue = route.sell_price;
+    const salesTax = grossRevenue * salesTaxRate;
+    const setupFee = grossRevenue * setupFeeRate;
+    const netRevenue = grossRevenue - salesTax - setupFee;
+    const netProfit = netRevenue - route.buy_price;
+    const netMargin = route.buy_price > 0 ? (netProfit / route.buy_price) * 100 : 0;
+
+    return {
+      ...route,
+      tax_channel: channel,
+      sales_tax_rate: salesTaxRate,
+      setup_fee_rate: setupFeeRate,
+      gross_revenue: grossRevenue,
+      net_revenue: netRevenue,
+      net_profit_per_unit: netProfit,
+      net_margin_percent: netMargin
+    };
+  }
+
+  // Component State
+  let state: ArbitrageState = {
+    region: localStorage.getItem('albionflow_region') || 'asia',
+    originCity: localStorage.getItem('albionflow_arb_origin') || 'ALL',
+    targetCity: localStorage.getItem('albionflow_arb_target') || 'ALL',
+    minProfit: parseInt(localStorage.getItem('albionflow_arb_min_profit') || '0', 10) || 0,
+    taxChannel: localStorage.getItem('albionflow_arb_tax_channel') || 'sell_order',
+    premium: localStorage.getItem('albionflow_arb_premium') !== 'false',
+    excludeStale: localStorage.getItem('albionflow_arb_exclude_stale') !== 'false',
+    excludeIlliquid: localStorage.getItem('albionflow_arb_exclude_illiquid') !== 'false',
+    sortKey: 'profit',
+    sortOrder: 'desc'
+  };
+
+  let rawRoutes: ArbitrageRoute[] = [];
+
+  // DOM references
+  let tableBody: HTMLTableSectionElement | null = null;
+  let emptyState: HTMLElement | null = null;
+  let routesCountBadge: HTMLElement | null = null;
+  let statusBadge: HTMLElement | null = null;
+  let statusLabel: HTMLElement | null = null;
+  let originSelect: HTMLSelectElement | null = null;
+  let targetSelect: HTMLSelectElement | null = null;
+  let minProfitInput: HTMLInputElement | null = null;
+  let taxChannelSelect: HTMLSelectElement | null = null;
+  let premiumToggleBtn: HTMLButtonElement | null = null;
+  let premiumStatusLabel: HTMLElement | null = null;
+  let excludeStaleCheck: HTMLInputElement | null = null;
+  let excludeIlliquidCheck: HTMLInputElement | null = null;
+  let swapBtn: HTMLButtonElement | null = null;
+  let resetBtn: HTMLButtonElement | null = null;
+
+  async function fetchArbitrageRoutes() {
+    const url = new URL('http://localhost:8081/api/v1/arbitrage/routes');
+    url.searchParams.set('region', state.region);
+    url.searchParams.set('min_profit', state.minProfit.toString());
+    url.searchParams.set('min_margin', '0');
+    url.searchParams.set('exclude_stale', state.excludeStale ? 'true' : 'false');
+    url.searchParams.set('exclude_illiquid', state.excludeIlliquid ? 'true' : 'false');
+    url.searchParams.set('channel', state.taxChannel);
+    url.searchParams.set('premium', state.premium ? 'true' : 'false');
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(url.toString(), { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const data: ArbitrageRoute[] = await res.json();
+      rawRoutes = data;
+      updateStatusBadge(true, `Live API (${state.region.toUpperCase()})`);
+    } catch (err) {
+      // Backend unreachable or offline: compute with rich fallback sample data
+      rawRoutes = FALLBACK_ROUTES_DATA.map((r) =>
+        recalculateRouteTaxes(r, state.taxChannel, state.premium)
+      );
+      updateStatusBadge(false, `Offline Snapshot (${state.region.toUpperCase()})`);
+    }
+
+    renderTable();
+  }
+
+  function updateStatusBadge(isLive: boolean, text: string) {
+    if (!statusBadge || !statusLabel) return;
+    statusBadge.className = isLive ? 'source-status live' : 'source-status offline';
+    statusLabel.textContent = text;
+  }
+
+  function renderTable() {
+    if (!tableBody) return;
+
+    // Filter routes according to current filters
+    let filtered = rawRoutes.map((r) =>
+      recalculateRouteTaxes(r, state.taxChannel, state.premium)
+    ).filter((item) => {
+      // Origin city
+      if (state.originCity !== 'ALL' && item.origin_city.toLowerCase() !== state.originCity.toLowerCase()) {
+        return false;
+      }
+      // Target city
+      if (state.targetCity !== 'ALL' && item.target_city.toLowerCase() !== state.targetCity.toLowerCase()) {
+        return false;
+      }
+      // Exclude Stale
+      const buyAgeSec = parseDurationSeconds(item.buy_price_age);
+      const sellAgeSec = parseDurationSeconds(item.sell_price_age);
+      const isStale = item.is_stale_route || item.is_buy_stale || item.is_sell_stale || buyAgeSec > 3600 || sellAgeSec > 3600;
+      if (state.excludeStale && isStale) {
+        return false;
+      }
+      // Exclude Illiquid
+      const isIlliquid = item.is_illiquid || item.traded_volume_24h < 15;
+      if (state.excludeIlliquid && isIlliquid) {
+        return false;
+      }
+      // Min Net Profit
+      if (state.minProfit > 0 && item.net_profit_per_unit < state.minProfit) {
+        return false;
+      }
+      return true;
+    });
+
+    // Sort routes
+    filtered.sort((a, b) => {
+      let valA = 0;
+      let valB = 0;
+      switch (state.sortKey) {
+        case 'margin':
+          valA = a.net_margin_percent;
+          valB = b.net_margin_percent;
+          break;
+        case 'volume':
+          valA = a.traded_volume_24h;
+          valB = b.traded_volume_24h;
+          break;
+        case 'buy_price':
+          valA = a.buy_price;
+          valB = b.buy_price;
+          break;
+        case 'profit':
+        default:
+          valA = a.net_profit_per_unit;
+          valB = b.net_profit_per_unit;
+          break;
+      }
+
+      if (state.sortOrder === 'asc') {
+        return valA > valB ? 1 : valA < valB ? -1 : 0;
+      } else {
+        return valA < valB ? 1 : valA > valB ? -1 : 0;
+      }
+    });
+
+    // Update count badge
+    if (routesCountBadge) {
+      routesCountBadge.textContent = `${filtered.length} Routes`;
+    }
+
+    // Toggle empty state
+    if (filtered.length === 0) {
+      tableBody.innerHTML = '';
+      if (emptyState) emptyState.style.display = 'block';
+      return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+
+    // Render Rows HTML
+    const htmlRows = filtered.map((item) => {
+      const itemInfo = parseItemInfo(item.item_id);
+      const buyAgeSec = parseDurationSeconds(item.buy_price_age);
+      const sellAgeSec = parseDurationSeconds(item.sell_price_age);
+      const buyAge = formatAgeBadge(buyAgeSec, item.is_buy_stale);
+      const sellAge = formatAgeBadge(sellAgeSec, item.is_sell_stale);
+      const liqBadge = getLiquidityBadge(item.traded_volume_24h, item.is_illiquid);
+      const risk = getRouteRisk(item);
+
+      const isProfitPositive = item.net_profit_per_unit >= 0;
+      const profitClass = isProfitPositive ? 'positive' : 'negative';
+      const profitSign = isProfitPositive ? '+' : '';
+
+      const isMarginPositive = item.net_margin_percent >= 0;
+      const marginClass = isMarginPositive ? 'positive' : 'negative';
+      const marginSign = isMarginPositive ? '+' : '';
+
+      const isOriginCaerleon = item.origin_city.toLowerCase() === 'caerleon';
+      const isTargetCaerleon = item.target_city.toLowerCase() === 'caerleon';
+
+      return `
+        <tr data-item-id="${item.item_id}" data-origin="${item.origin_city}" data-target="${item.target_city}">
+          <td class="td-tier">
+            <span class="tier-badge tier-t${itemInfo.tier}">${itemInfo.tierEnc}</span>
+          </td>
+          <td class="td-item">
+            <div class="item-cell">
+              <span class="item-name">${itemInfo.name}</span>
+              <span class="item-sub">${item.item_id}</span>
+            </div>
+          </td>
+          <td class="td-route">
+            <div class="route-wrapper">
+              <span class="city-name origin-city ${isOriginCaerleon ? 'caerleon' : ''}">${item.origin_city}</span>
+              <span class="route-arrow">➔</span>
+              <span class="city-name target-city ${isTargetCaerleon ? 'caerleon' : ''}">${item.target_city}</span>
+            </div>
+          </td>
+          <td class="td-buy num-cell-right">
+            <div class="price-cell-wrapper">
+              <span class="price-val tabular-figures">${formatSilver(item.buy_price)} <span class="silver-unit">Silver</span></span>
+              <span class="age-badge ${buyAge.cssClass}"><span class="dot"></span>${buyAge.text}</span>
+            </div>
+          </td>
+          <td class="td-sell num-cell-right">
+            <div class="price-cell-wrapper">
+              <span class="price-val tabular-figures">${formatSilver(item.sell_price)} <span class="silver-unit">Silver</span></span>
+              <span class="age-badge ${sellAge.cssClass}"><span class="dot"></span>${sellAge.text}</span>
+            </div>
+          </td>
+          <td class="td-profit num-cell-right">
+            <span class="net-profit-val tabular-figures ${profitClass}">${profitSign}${formatSilver(item.net_profit_per_unit)} Silver</span>
+          </td>
+          <td class="td-margin num-cell-right">
+            <span class="net-margin-val tabular-figures ${marginClass}">${marginSign}${item.net_margin_percent.toFixed(1)}%</span>
+          </td>
+          <td class="td-volume num-cell-right">
+            <div class="volume-wrapper">
+              <span class="volume-val tabular-figures">${formatSilver(item.traded_volume_24h)} unit/day</span>
+              <span class="liq-badge ${liqBadge.cssClass}">${liqBadge.text}</span>
+            </div>
+          </td>
+          <td class="td-risk">
+            <span class="risk-tag ${risk.cssClass}">
+              <span class="risk-dot"></span>
+              ${risk.text}
+            </span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tableBody.innerHTML = htmlRows;
+    updateSortIndicators();
+  }
+
+  function updateSortIndicators() {
+    const sortBtns = document.querySelectorAll<HTMLButtonElement>('.sort-btn');
+    sortBtns.forEach((btn) => {
+      const key = btn.dataset.sort;
+      const arrowSpan = btn.querySelector('.sort-arrow');
+      if (key === state.sortKey) {
+        btn.classList.add('active');
+        if (arrowSpan) {
+          arrowSpan.textContent = state.sortOrder === 'asc' ? '▲' : '▼';
+        }
+      } else {
+        btn.classList.remove('active');
+        if (arrowSpan) {
+          arrowSpan.textContent = '';
+        }
+      }
+    });
+
+    const thElements = document.querySelectorAll<HTMLTableCellElement>('.sortable-th');
+    thElements.forEach((th) => {
+      const key = th.dataset.sortKey;
+      const iconSpan = th.querySelector('.col-sort-icon');
+      if (key === state.sortKey) {
+        th.classList.add('active-sort');
+        if (iconSpan) {
+          iconSpan.textContent = state.sortOrder === 'asc' ? '▲' : '▼';
+        }
+      } else {
+        th.classList.remove('active-sort');
+        if (iconSpan) {
+          iconSpan.textContent = '';
+        }
+      }
+    });
+  }
+
+  function setSort(key: ArbitrageState['sortKey']) {
+    if (state.sortKey === key) {
+      state.sortOrder = state.sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.sortKey = key;
+      state.sortOrder = key === 'buy_price' ? 'asc' : 'desc';
+    }
+    renderTable();
+  }
+
+  function saveFilterState() {
+    localStorage.setItem('albionflow_arb_origin', state.originCity);
+    localStorage.setItem('albionflow_arb_target', state.targetCity);
+    localStorage.setItem('albionflow_arb_min_profit', state.minProfit.toString());
+    localStorage.setItem('albionflow_arb_tax_channel', state.taxChannel);
+    localStorage.setItem('albionflow_arb_premium', state.premium ? 'true' : 'false');
+    localStorage.setItem('albionflow_arb_exclude_stale', state.excludeStale ? 'true' : 'false');
+    localStorage.setItem('albionflow_arb_exclude_illiquid', state.excludeIlliquid ? 'true' : 'false');
+  }
+
+  function initArbitrageTable() {
+    tableBody = document.getElementById('arbitrage-table-body') as HTMLTableSectionElement | null;
+    emptyState = document.getElementById('arbitrage-empty-state');
+    routesCountBadge = document.getElementById('routes-count-badge');
+    statusBadge = document.getElementById('arbitrage-status-badge');
+    statusLabel = document.getElementById('arbitrage-status-label');
+
+    originSelect = document.getElementById('origin-city-select') as HTMLSelectElement | null;
+    targetSelect = document.getElementById('target-city-select') as HTMLSelectElement | null;
+    minProfitInput = document.getElementById('min-profit-input') as HTMLInputElement | null;
+    taxChannelSelect = document.getElementById('tax-channel-select') as HTMLSelectElement | null;
+    premiumToggleBtn = document.getElementById('premium-toggle-btn') as HTMLButtonElement | null;
+    premiumStatusLabel = document.getElementById('premium-status-label');
+    excludeStaleCheck = document.getElementById('exclude-stale-check') as HTMLInputElement | null;
+    excludeIlliquidCheck = document.getElementById('exclude-illiquid-check') as HTMLInputElement | null;
+    swapBtn = document.getElementById('swap-cities-btn') as HTMLButtonElement | null;
+    resetBtn = document.getElementById('reset-filters-btn') as HTMLButtonElement | null;
+
+    // Apply initial state values to controls
+    if (originSelect) originSelect.value = state.originCity;
+    if (targetSelect) targetSelect.value = state.targetCity;
+    if (minProfitInput) minProfitInput.value = state.minProfit.toString();
+    if (taxChannelSelect) taxChannelSelect.value = state.taxChannel;
+    if (excludeStaleCheck) excludeStaleCheck.checked = state.excludeStale;
+    if (excludeIlliquidCheck) excludeIlliquidCheck.checked = state.excludeIlliquid;
+
+    const updatePremiumUI = () => {
+      if (!premiumToggleBtn || !premiumStatusLabel) return;
+      if (state.premium) {
+        premiumToggleBtn.classList.add('active');
+        premiumToggleBtn.setAttribute('aria-checked', 'true');
+        premiumStatusLabel.textContent = 'Premium Active (4% Tax)';
+      } else {
+        premiumToggleBtn.classList.remove('active');
+        premiumToggleBtn.setAttribute('aria-checked', 'false');
+        premiumStatusLabel.textContent = 'Non-Premium (8% Tax)';
+      }
+    };
+    updatePremiumUI();
+
+    // Event Listeners for controls
+    originSelect?.addEventListener('change', () => {
+      state.originCity = originSelect?.value || 'ALL';
+      saveFilterState();
+      renderTable();
+    });
+
+    targetSelect?.addEventListener('change', () => {
+      state.targetCity = targetSelect?.value || 'ALL';
+      saveFilterState();
+      renderTable();
+    });
+
+    swapBtn?.addEventListener('click', () => {
+      const temp = state.originCity;
+      state.originCity = state.targetCity;
+      state.targetCity = temp;
+      if (originSelect) originSelect.value = state.originCity;
+      if (targetSelect) targetSelect.value = state.targetCity;
+      saveFilterState();
+      renderTable();
+    });
+
+    minProfitInput?.addEventListener('input', () => {
+      const val = parseInt(minProfitInput?.value || '0', 10);
+      state.minProfit = isNaN(val) || val < 0 ? 0 : val;
+      saveFilterState();
+      renderTable();
+    });
+
+    taxChannelSelect?.addEventListener('change', () => {
+      state.taxChannel = taxChannelSelect?.value || 'sell_order';
+      saveFilterState();
+      fetchArbitrageRoutes();
+    });
+
+    premiumToggleBtn?.addEventListener('click', () => {
+      state.premium = !state.premium;
+      updatePremiumUI();
+      saveFilterState();
+      fetchArbitrageRoutes();
+    });
+
+    excludeStaleCheck?.addEventListener('change', () => {
+      state.excludeStale = excludeStaleCheck?.checked ?? true;
+      saveFilterState();
+      fetchArbitrageRoutes();
+    });
+
+    excludeIlliquidCheck?.addEventListener('change', () => {
+      state.excludeIlliquid = excludeIlliquidCheck?.checked ?? true;
+      saveFilterState();
+      fetchArbitrageRoutes();
+    });
+
+    resetBtn?.addEventListener('click', () => {
+      state.originCity = 'ALL';
+      state.targetCity = 'ALL';
+      state.minProfit = 0;
+      state.taxChannel = 'sell_order';
+      state.premium = true;
+      state.excludeStale = true;
+      state.excludeIlliquid = true;
+
+      if (originSelect) originSelect.value = 'ALL';
+      if (targetSelect) targetSelect.value = 'ALL';
+      if (minProfitInput) minProfitInput.value = '0';
+      if (taxChannelSelect) taxChannelSelect.value = 'sell_order';
+      if (excludeStaleCheck) excludeStaleCheck.checked = true;
+      if (excludeIlliquidCheck) excludeIlliquidCheck.checked = true;
+      updatePremiumUI();
+
+      saveFilterState();
+      fetchArbitrageRoutes();
+    });
+
+    // Toolbar sorting buttons
+    const sortBtns = document.querySelectorAll<HTMLButtonElement>('.sort-btn');
+    sortBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.sort as ArbitrageState['sortKey'];
+        if (key) setSort(key);
+      });
+    });
+
+    // Header click sorting
+    const thElements = document.querySelectorAll<HTMLTableCellElement>('.sortable-th');
+    thElements.forEach((th) => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sortKey as ArbitrageState['sortKey'];
+        if (key) setSort(key);
+      });
+    });
+
+    // Listen to Region Switcher & Price Refresh events from Header
+    window.addEventListener('albionflow:region-changed', (e: any) => {
+      if (e.detail?.region) {
+        state.region = e.detail.region.toLowerCase();
+        fetchArbitrageRoutes();
+      }
+    });
+
+    window.addEventListener('albionflow:prices-refreshed', () => {
+      fetchArbitrageRoutes();
+    });
+
+    // Initial Fetch
+    fetchArbitrageRoutes();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initArbitrageTable);
+  } else {
+    initArbitrageTable();
+  }
+</script>

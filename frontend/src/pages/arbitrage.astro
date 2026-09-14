@@ -1,0 +1,82 @@
+---
+// arbitrage.astro - Cross-City Hauling Arbitrage Matrix Page
+// AlbionFlow Real-Time Trade Route Scanner
+import Layout from '../layouts/Layout.astro';
+import ArbitrageTable from '../components/ArbitrageTable.astro';
+---
+
+<Layout title="AlbionFlow — Hauling Arbitrage Matrix">
+  <section class="arbitrage-page-container panel" id="arbitrage-view">
+    <header class="section-header">
+      <div class="header-left">
+        <h1 class="section-title">CROSS-CITY HAULING ARBITRAGE MATRIX</h1>
+        <p class="section-subtitle">
+          Real-time price spreads between Royal trade hubs and Caerleon, automated sales tax deductions, and route liquidity risk tags.
+        </p>
+      </div>
+      <div class="header-right">
+        <span class="status-indicator live">
+          <span class="dot"></span>
+          HAULING ENGINE ACTIVE
+        </span>
+      </div>
+    </header>
+
+    <!-- Arbitrage Table Component (Task 3.4) -->
+    <ArbitrageTable />
+  </section>
+</Layout>
+
+<style>
+  .arbitrage-page-container {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--border-hairline);
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+
+  .section-subtitle {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-top: 0.2rem;
+  }
+
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    background-color: var(--surface-elevated);
+    border: 1px solid var(--border-hairline);
+    color: var(--accent-mint);
+  }
+
+  .status-indicator .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--accent-mint);
+  }
+</style>

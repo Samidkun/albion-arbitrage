@@ -214,9 +214,9 @@ Files:
 - Create: `frontend/src/components/ArbitrageTable.astro`
 - Create: `frontend/src/pages/arbitrage.astro`
 
-- [ ] **Step 1: Build trade route matrix (Origin City -> Target City -> Net Spread)**
-- [ ] **Step 2: Filter by minimum net margin & exclude stale data**
-- [ ] **Step 3: Commit:** `feat(frontend): cross-city hauling arbitrage route matrix`
+- [x] **Step 1: Build trade route matrix (Origin City -> Target City -> Net Spread)**
+- [x] **Step 2: Filter by minimum net margin & exclude stale data**
+- [x] **Step 3: Commit:** `feat(frontend): cross-city hauling arbitrage route matrix`
 
 ---
 
