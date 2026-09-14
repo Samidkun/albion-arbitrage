@@ -34,6 +34,21 @@ CREATE TABLE IF NOT EXISTS price_snapshots (
 
 CREATE INDEX IF NOT EXISTS idx_prices_lookup ON price_snapshots(region, item_id, city);
 CREATE INDEX IF NOT EXISTS idx_prices_lookup_recorded ON price_snapshots(region, item_id, city, recorded_at);
+
+CREATE TABLE IF NOT EXISTS market_volumes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    region TEXT NOT NULL,
+    item_id TEXT NOT NULL,
+    city TEXT NOT NULL,
+    quality INTEGER NOT NULL DEFAULT 1,
+    item_count BIGINT NOT NULL DEFAULT 0,
+    silver_amount BIGINT NOT NULL DEFAULT 0,
+    timestamp TEXT NOT NULL,
+    recorded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_vol_region_item_city_quality UNIQUE(region, item_id, city, quality)
+);
+
+CREATE INDEX IF NOT EXISTS idx_volume_lookup ON market_volumes(region, item_id, city);
 `
 
 // NewStore opens and initializes the SQLite database with WAL mode and table schemas.

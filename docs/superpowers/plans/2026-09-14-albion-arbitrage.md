@@ -71,10 +71,10 @@ Files:
 - Create: `backend/pkg/store/volumes.go`
 - Test: `backend/pkg/store/volumes_test.go`
 
-- [ ] **Step 1: Create `market_volumes` table storing 24h traded `item_count` per city and item**
-- [ ] **Step 2: Implement query functions for 24h volume aggregation**
-- [ ] **Step 3: Write tests verifying volume retrieval and liquidity flagging**
-- [ ] **Step 4: Commit:** `feat(backend): trade volume storage to guard against illiquid trades`
+- [x] **Step 1: Create `market_volumes` table storing 24h traded `item_count` per city and item**
+- [x] **Step 2: Implement query functions for 24h volume aggregation**
+- [x] **Step 3: Write tests verifying volume retrieval and liquidity flagging**
+- [x] **Step 4: Commit:** `feat(backend): trade volume storage to guard against illiquid trades`
 
 ---
 
