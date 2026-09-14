@@ -121,11 +121,11 @@ Files:
 - Create: `backend/pkg/engine/arbitrage.go`
 - Test: `backend/pkg/engine/arbitrage_test.go`
 
-- [ ] **Step 1: Implement configurable sales tax channels (0% direct, 2.5% buy order, 4% premium sell, 8% non-premium)**
-- [ ] **Step 2: Scan all pairs of 6 Royal Cities + Caerleon for positive spread**
-- [ ] **Step 3: Attach Data Freshness Guard: flag routes using data > 60m old as STALE**
-- [ ] **Step 4: Write unit tests verifying taxes, setup fees, and margin ranking**
-- [ ] **Step 5: Commit:** `feat(backend): cross-city arbitrage route scanner with flexible tax channels`
+- [x] **Step 1: Implement configurable sales tax channels (0% direct, 2.5% buy order, 4% premium sell, 8% non-premium)**
+- [x] **Step 2: Scan all pairs of 6 Royal Cities + Caerleon for positive spread**
+- [x] **Step 3: Attach Data Freshness Guard: flag routes using data > 60m old as STALE**
+- [x] **Step 4: Write unit tests verifying taxes, setup fees, and margin ranking**
+- [x] **Step 5: Commit:** `feat(backend): cross-city arbitrage route scanner with flexible tax channels`
 
 ---
 
