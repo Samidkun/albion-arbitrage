@@ -1,5 +1,11 @@
 # AlbionFlow
 
+
+
+<p align="center">
+  <img src="docs/screenshots/preview.png" alt="Application Preview" width="100%" style="border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);" />
+</p>
+
 AlbionFlow is a high-precision, real-time market and refining arbitrage engine for Albion Online. It ingests prices and 24-hour trade volumes from The Albion Online Data Project (AODP) across Asia, Americas, and Europe into an embedded SQLite store to identify profitable refining loops and transport arbitrage opportunities while eliminating common player calculation traps (stale data, illiquid volumes, nutrition fee miscalculations, intermediate tax double-counting, and stone enchantment discrepancies).
 
 ---
